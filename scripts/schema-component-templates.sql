@@ -11,9 +11,13 @@ CREATE TABLE IF NOT EXISTS component_templates (
   description TEXT,
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  metadata JSONB DEFAULT '{}'::jsonb
 );
 
 -- Indexes for faster queries
 CREATE INDEX IF NOT EXISTS idx_component_templates_subject ON component_templates(subject);
 CREATE INDEX IF NOT EXISTS idx_component_templates_active ON component_templates(is_active);
+CREATE INDEX IF NOT EXISTS idx_component_templates_user ON component_templates(user_id);
+CREATE INDEX IF NOT EXISTS idx_component_templates_metadata ON component_templates USING gin(metadata);
