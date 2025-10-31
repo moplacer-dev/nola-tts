@@ -7,7 +7,7 @@ const pool = new Pool({
 });
 
 // Path to Excel file
-const EXCEL_FILE_PATH = path.join(__dirname, '../../hlp/hlp_module_data.xlsx');
+const EXCEL_FILE_PATH = path.join(__dirname, 'data/hlp_module_data.xlsx');
 
 /**
  * Get the value from a cell, returning undefined if empty
