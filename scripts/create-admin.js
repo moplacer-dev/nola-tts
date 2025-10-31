@@ -2,7 +2,7 @@ const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 
 const pool = new Pool({
-  connectionString: 'postgresql://localhost/nola_ess',
+  connectionString: process.env.DATABASE_URL || 'postgresql://localhost/nola_ess',
 });
 
 async function createAdmin() {
