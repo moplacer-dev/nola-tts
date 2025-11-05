@@ -62,14 +62,14 @@ export async function extractEventsFromPDF(
   console.log(`Sending extracted text to Claude for analysis...`);
 
   // Build the prompt for Claude
-  const prompt = `Extract ONLY schedule-blocking events from this school district calendar text for the school year ${schoolYearStart} to ${schoolYearEnd}.
+  const prompt = `Extract events that could impact curriculum planning from this school district calendar text for the school year ${schoolYearStart} to ${schoolYearEnd}.
 
 CALENDAR TEXT:
 ${pdfText}
 
-CRITICAL: Extract ONLY events that significantly impact curriculum instruction time. Be selective and focus on schedule changes.
+IMPORTANT: Extract events that teachers need to consider when planning pacing guides for 7th-9th grade students. Since users review and approve all extracted events before adding them, be inclusive rather than overly restrictive.
 
-**Events TO Extract (Schedule-Blocking Only):**
+**Events TO Extract:**
 
 1. **School Closures & Breaks:**
    - Any day labeled "School Closed", "No School", "Closed"
@@ -80,71 +80,77 @@ CRITICAL: Extract ONLY events that significantly impact curriculum instruction t
 2. **First/Last Days:**
    - First Day of School (Students)
    - Last Day of School (Students)
+   - First Day for Staff (if separate)
 
-3. **Testing Windows (CRITICAL):**
-   - State testing windows/weeks (e.g., "State Testing Window", "LEAP Testing", "Assessment Week")
-   - Only multi-day testing periods that block regular instruction
-   - NOT individual classroom tests or quizzes
+3. **Testing & Assessments:**
+   - State testing windows/weeks (e.g., "LEAP Testing", "Assessment Week", "State Testing")
+   - Standardized testing periods (e.g., "I-Ready Testing", "MAP Testing")
+   - Benchmark assessments
+   - School-wide testing days
 
-4. **Professional Development (Students Absent):**
-   - ONLY PD days when students are NOT in school
+4. **Professional Development:**
+   - PD days when students are NOT in school
    - Teacher Work Days when students are absent
    - In-Service Days when students are absent
+   - Staff-only professional development
 
-5. **Early Dismissal Days:**
-   - Early Release Days
+5. **Schedule Modifications:**
+   - Early Release Days / Early Dismissal
    - Half Days
-   - Modified schedule days with early dismissal
+   - Modified schedule days
+   - Late Start days
 
-6. **Major School-Wide Events:**
-   - Parent-Teacher Conferences (if they block regular instruction)
-   - School-wide assemblies or events that cancel classes
+6. **School-Wide Events:**
+   - Parent-Teacher Conferences
+   - School pictures / Picture Day
+   - Field trips (especially multi-day or grade-level 7-9)
+   - School-wide assemblies
+   - Open House events
+   - Report card pickup days
 
 **Events to SKIP (Do NOT Extract):**
 
 ❌ **Recurring Staff Meetings:**
-   - Weekly/monthly meetings (e.g., "CareTeam meeting", "Leadership Team Meeting", "NJTSS Meeting", "PBIS Meeting")
+   - Weekly meetings (CareTeam, Leadership, NJTSS, PBIS)
+   - Department meetings
    - PD during school hours (students still attend)
 
-❌ **Grade-Specific Events:**
-   - "6th grade" anything (unless school-wide closure)
-   - Grade-level field trips
-   - Grade-level SEL or assemblies
+❌ **Grade-Specific Events for OTHER Grades:**
+   - 6th grade events (this is for 7-9 only)
+   - 10th+ grade events
+   - Elementary-specific events
 
 ❌ **Cultural/Awareness Days:**
    - Black History Month, Hispanic Heritage Month, Women's History Month
    - Valentine's Day, Pi Day, Earth Day, Nurses' Day
-   - Breast Cancer Awareness Month
-   - ANY awareness day/month that doesn't close school
+   - ANY awareness day/month that doesn't close school or modify schedule
 
 ❌ **Administrative Events:**
-   - Marking period begins/ends
-   - Report card distribution
+   - Marking period begins/ends (unless schedule changes)
+   - Report card distribution (unless special event)
    - Lesson plans due
-   - Household surveys
+   - Surveys and paperwork deadlines
    - Student of the Month announcements
 
 ❌ **Optional/After School Events:**
    - After school programs
-   - Optional evening events (e.g., "Trunk or Treat", "Thanksgiving Dinner & Movie")
-   - Back to School Night (evening)
-   - Picture Day
-   - Team Pictures
+   - Optional evening events (Trunk or Treat, movie nights)
+   - Evening parent events (unless school-wide and during day)
 
-❌ **Minor Schedule Notes:**
-   - "PD 90 minutes" (students still in school)
-   - Daylight Savings
-   - Emergency Plans Due
+❌ **Minor Notes:**
+   - Daylight Savings reminders
+   - Emergency plan deadlines
+   - Weather delays (too variable)
 
-For each schedule-blocking event found, extract:
+For each event found, extract:
 - Event name (exactly as it appears, but simplified if verbose)
 - Start date (YYYY-MM-DD format)
 - Duration in days (count carefully for multi-day events)
 - Event type classification
-- All extracted events should have blocks_curriculum: true (since we're only extracting schedule-blocking events)
+- All extracted events should have blocks_curriculum: true
 - Confidence level (high for clear dates, medium for inferred dates)
 
-QUALITY OVER QUANTITY: Extract 15-30 major events, NOT 100+. Be highly selective.
+WHEN IN DOUBT, INCLUDE IT: Users will review all extracted events and can remove ones they don't need. It's better to include a potentially useful event than to skip something important for pacing.
 
 Return ONLY valid JSON in this exact format:
 {
