@@ -221,23 +221,41 @@ export default function CalendarViewV2() {
 
     console.log('🔴 [BLOCKING DEBUG] baseCalendarItems count:', baseCalendarItems.length);
     console.log('🔴 [BLOCKING DEBUG] blockingItems count:', blockingItems.length);
-    console.log('🔴 [BLOCKING DEBUG] First 3 base items:', baseCalendarItems.slice(0, 3).map(item => ({
-      id: item.id,
-      display_name: item.display_name,
-      start_date: item.start_date,
-      blocks_curriculum: item.blocks_curriculum
-    })));
+
+    if (baseCalendarItems.length > 0) {
+      const firstItem = baseCalendarItems[0];
+      console.log('🔴 [BLOCKING DEBUG] First item start_date:', firstItem.start_date);
+      console.log('🔴 [BLOCKING DEBUG] First item start_date type:', typeof firstItem.start_date);
+      console.log('🔴 [BLOCKING DEBUG] First item full object:', JSON.stringify(firstItem, null, 2));
+    }
 
     blockingItems.forEach(item => {
         // Parse date carefully to avoid timezone issues
         // IMPORTANT: Use local date parsing (year, month-1, day) not new Date(string)
-        const [year, month, day] = item.start_date.split('-').map(Number);
+
+        // Convert Date object to YYYY-MM-DD string if needed
+        let dateString = item.start_date;
+        if (dateString instanceof Date) {
+          const year = dateString.getFullYear();
+          const month = String(dateString.getMonth() + 1).padStart(2, '0');
+          const day = String(dateString.getDate()).padStart(2, '0');
+          dateString = `${year}-${month}-${day}`;
+        } else if (typeof dateString === 'string' && dateString.includes('T')) {
+          // If it's an ISO timestamp, extract just the date part
+          dateString = dateString.split('T')[0];
+        }
+
+        console.log('🔴 [BLOCKING DEBUG] Processing item:', item.display_name, 'start_date:', dateString);
+
+        const [year, month, day] = dateString.split('-').map(Number);
+        console.log('🔴 [BLOCKING DEBUG] Parsed:', { year, month, day });
+
         let currentDate = new Date(year, month - 1, day);
 
         // Add all dates in the event's duration
         for (let i = 0; i < item.duration_days; i++) {
-          const dateString = formatDateForDB(currentDate);
-          blocked.add(dateString);
+          const dateKey = formatDateForDB(currentDate);
+          blocked.add(dateKey);
 
           // Move to next day
           currentDate.setDate(currentDate.getDate() + 1);
@@ -245,7 +263,7 @@ export default function CalendarViewV2() {
       });
 
     console.log('🔴 [BLOCKING DEBUG] Total blocked dates:', blocked.size);
-    console.log('🔴 [BLOCKING DEBUG] First 5 blocked dates:', Array.from(blocked).slice(0, 5));
+    console.log('🔴 [BLOCKING DEBUG] First 10 blocked dates:', Array.from(blocked).slice(0, 10));
 
     return blocked;
   }, [baseCalendarItems]);
