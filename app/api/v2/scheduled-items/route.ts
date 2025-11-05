@@ -196,9 +196,17 @@ export async function GET(req: NextRequest) {
 
     const result = await pool.query(query, params);
 
+    // Format dates as YYYY-MM-DD strings to avoid timezone issues
+    const items = result.rows.map(row => ({
+      ...row,
+      start_date: row.start_date instanceof Date
+        ? row.start_date.toISOString().split('T')[0]
+        : row.start_date
+    }));
+
     const response: GetScheduledItemsResponse = {
-      items: result.rows,
-      count: result.rows.length
+      items,
+      count: items.length
     };
 
     return NextResponse.json(response);
