@@ -217,9 +217,18 @@ export default function CalendarViewV2() {
     const blocked = new Set<string>();
 
     // Get base calendar items that block curriculum
-    baseCalendarItems
-      .filter(item => item.blocks_curriculum)
-      .forEach(item => {
+    const blockingItems = baseCalendarItems.filter(item => item.blocks_curriculum);
+
+    console.log('🔴 [BLOCKING DEBUG] baseCalendarItems count:', baseCalendarItems.length);
+    console.log('🔴 [BLOCKING DEBUG] blockingItems count:', blockingItems.length);
+    console.log('🔴 [BLOCKING DEBUG] First 3 base items:', baseCalendarItems.slice(0, 3).map(item => ({
+      id: item.id,
+      display_name: item.display_name,
+      start_date: item.start_date,
+      blocks_curriculum: item.blocks_curriculum
+    })));
+
+    blockingItems.forEach(item => {
         // Parse date carefully to avoid timezone issues
         // IMPORTANT: Use local date parsing (year, month-1, day) not new Date(string)
         const [year, month, day] = item.start_date.split('-').map(Number);
@@ -234,6 +243,9 @@ export default function CalendarViewV2() {
           currentDate.setDate(currentDate.getDate() + 1);
         }
       });
+
+    console.log('🔴 [BLOCKING DEBUG] Total blocked dates:', blocked.size);
+    console.log('🔴 [BLOCKING DEBUG] First 5 blocked dates:', Array.from(blocked).slice(0, 5));
 
     return blocked;
   }, [baseCalendarItems]);
