@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import pool from '@/lib/db';
-import puppeteer from 'puppeteer';
-import { execSync } from 'child_process';
+import puppeteer from 'puppeteer-core';
+import chromium from '@sparticuz/chromium';
 
 // Helper function to add school days (skipping weekends)
 function addSchoolDays(startDate: Date, numDays: number): Date {
@@ -453,36 +453,11 @@ export async function POST(
       htmlPages.push(html);
     }
 
-    // Launch Puppeteer and generate PDF
-    // Find Chrome executable path
-    let executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
-
-    // Try to find Chrome using npx puppeteer browsers in production
-    if (!executablePath && process.env.RENDER) {
-      try {
-        const result = execSync('npx puppeteer browsers list --json', { encoding: 'utf8' });
-        const browsers = JSON.parse(result);
-        const chromeBrowser = browsers.browsers?.find((b: any) => b.name === 'chrome');
-        if (chromeBrowser?.executablePath) {
-          executablePath = chromeBrowser.executablePath;
-          console.log('Found Chrome at:', executablePath);
-        }
-      } catch (error) {
-        console.error('Could not find Chrome executable:', error);
-      }
-    }
-
+    // Launch Puppeteer with @sparticuz/chromium (works on Render)
     const browser = await puppeteer.launch({
+      args: chromium.args,
+      executablePath: await chromium.executablePath(),
       headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--disable-gpu',
-      ],
-      // Use installed Chrome in production (Render)
-      executablePath: executablePath || undefined,
     });
 
     const page = await browser.newPage();
