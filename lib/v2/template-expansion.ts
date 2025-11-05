@@ -64,6 +64,9 @@ function expandSingle(
   calendarType: string,
   metadata?: ScheduledItemMetadata
 ): ScheduledItemInput[] {
+  // Base calendar items ALWAYS block curriculum
+  const blocks_curriculum = calendarType === 'base' ? true : (template.default_blocks_curriculum || false);
+
   return [{
     guide_id: guideId,
     calendar_type: calendarType as CalendarType,
@@ -75,7 +78,7 @@ function expandSingle(
     group_index: 0,
     source: 'library',
     metadata: metadata || {},
-    blocks_curriculum: template.default_blocks_curriculum || false
+    blocks_curriculum
   }];
 }
 
@@ -101,6 +104,9 @@ function expandMultiSequence(
 
   let currentDate = startDate;
 
+  // Base calendar items ALWAYS block curriculum
+  const blocks_curriculum = calendarType === 'base' ? true : false;
+
   config.items.forEach((item, index) => {
     // For each item, add 'days' worth of scheduled items
     for (let d = 0; d < item.days; d++) {
@@ -116,7 +122,7 @@ function expandMultiSequence(
         source: 'library',
         title_override: item.title,
         metadata: metadata || {},
-        blocks_curriculum: false
+        blocks_curriculum
       });
 
       // Move to next school day (skip weekends and blocked dates)
@@ -150,6 +156,9 @@ function expandMultiRotation(
   const rotationNumber = metadata?.rotation_number || 1;
   let currentDate = startDate;
 
+  // Base calendar items ALWAYS block curriculum
+  const blocks_curriculum = calendarType === 'base' ? true : false;
+
   for (let session = 1; session <= config.sessions; session++) {
     // Replace {session} placeholder but KEEP {rotation} for dynamic substitution
     // Examples: "R{rotation}, S{session}" → "R{rotation}, S3"
@@ -169,7 +178,7 @@ function expandMultiRotation(
       source: 'library',
       title_override: title,
       metadata: { ...metadata, rotation_number: rotationNumber },
-      blocks_curriculum: false
+      blocks_curriculum
     });
 
     // Move to next school day
@@ -201,6 +210,9 @@ function expandMultiGrouped(
 
   let currentDate = startDate;
 
+  // Base calendar items ALWAYS block curriculum
+  const blocks_curriculum = calendarType === 'base' ? true : false;
+
   config.items.forEach((item) => {
     const repeatCount = item.repeat || 1;
 
@@ -219,7 +231,7 @@ function expandMultiGrouped(
           source: 'library',
           title_override: item.title,
           metadata: metadata || {},
-          blocks_curriculum: false
+          blocks_curriculum
         });
 
         // Move to next school day
