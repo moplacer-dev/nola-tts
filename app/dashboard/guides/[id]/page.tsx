@@ -255,10 +255,17 @@ export default function CalendarViewV2() {
 
         let currentDate = new Date(year, month - 1, day);
 
-        // Add all dates in the event's duration
-        for (let i = 0; i < item.duration_days; i++) {
-          const dateKey = formatDateForDB(currentDate);
-          blocked.add(dateKey);
+        // Add all SCHOOL DAYS in the event's duration (skip weekends)
+        let schoolDaysAdded = 0;
+        while (schoolDaysAdded < item.duration_days) {
+          const dayOfWeek = currentDate.getDay();
+
+          // Only block weekdays (Mon-Fri = 1-5, skip Sat=6, Sun=0)
+          if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+            const dateKey = formatDateForDB(currentDate);
+            blocked.add(dateKey);
+            schoolDaysAdded++;
+          }
 
           // Move to next day
           currentDate.setDate(currentDate.getDate() + 1);
