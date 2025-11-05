@@ -119,7 +119,7 @@ export function DraggableComponent({
   // Display values: Override takes precedence over template defaults
   const rawTitle = item.title_override || item.display_name || 'Untitled';
   const displayTitle = substituteMetadataInTitle(rawTitle);
-  const displayColor = item.color_override || item.color || '#6B7280';
+  const baseColor = item.color_override || item.color || '#6B7280';
 
   // Check if this is a base calendar event
   const isBaseEvent = item.calendar_type === 'base';
@@ -129,6 +129,12 @@ export function DraggableComponent({
   // On subject calendars, base events are read-only (shown for context)
   const isDraggable = !isBaseEvent || isViewingBaseCalendar;
   const isEditable = !isBaseEvent || isViewingBaseCalendar;
+
+  // For base events: Use solid color on base calendar, light opacity on subject calendars
+  // For subject events: Always use light opacity
+  const displayColor = isBaseEvent && isViewingBaseCalendar
+    ? baseColor  // Solid color (no opacity) for base events on base calendar
+    : baseColor + '20';  // ~12% opacity for subject events and base-events-on-subject-calendars
 
   return (
     <div
@@ -149,8 +155,8 @@ export function DraggableComponent({
         isDraggable && isSelected ? 'border-2 border-blue-600 shadow-lg' : 'border'
       )}
       style={{
-        backgroundColor: displayColor + '20', // Add 20 for ~12% opacity
-        borderColor: isSelected && isDraggable ? '#2563EB' : displayColor, // Blue border when selected
+        backgroundColor: displayColor, // Opacity already applied in displayColor calculation
+        borderColor: isSelected && isDraggable ? '#2563EB' : baseColor, // Blue border when selected, else base color
         color: '#1f2937' // gray-800 for text
       }}
     >
