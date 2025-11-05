@@ -68,13 +68,35 @@ export async function POST(req: NextRequest) {
 
     const blockedDates = new Set<string>();
     for (const event of blockedDatesResult.rows) {
-      const startDate = new Date(event.start_date);
-      for (let i = 0; i < event.duration_days; i++) {
-        const year = startDate.getFullYear();
-        const month = String(startDate.getMonth() + 1).padStart(2, '0');
-        const day = String(startDate.getDate()).padStart(2, '0');
-        blockedDates.add(`${year}-${month}-${day}`);
-        startDate.setDate(startDate.getDate() + 1);
+      // Parse date safely (PostgreSQL DATE comes as string YYYY-MM-DD or Date object)
+      let dateString = event.start_date;
+      if (dateString instanceof Date) {
+        const y = dateString.getFullYear();
+        const m = String(dateString.getMonth() + 1).padStart(2, '0');
+        const d = String(dateString.getDate()).padStart(2, '0');
+        dateString = `${y}-${m}-${d}`;
+      }
+
+      const [year, month, day] = dateString.split('-').map(Number);
+      const startDate = new Date(year, month - 1, day);
+
+      // Add SCHOOL DAYS only (skip weekends) - matches client-side logic
+      let schoolDaysAdded = 0;
+      const currentDate = new Date(startDate);
+
+      while (schoolDaysAdded < event.duration_days) {
+        const dayOfWeek = currentDate.getDay();
+
+        // Only block weekdays (Mon-Fri = 1-5, skip Sat=6, Sun=0)
+        if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+          const y = currentDate.getFullYear();
+          const m = String(currentDate.getMonth() + 1).padStart(2, '0');
+          const d = String(currentDate.getDate()).padStart(2, '0');
+          blockedDates.add(`${y}-${m}-${d}`);
+          schoolDaysAdded++;
+        }
+
+        currentDate.setDate(currentDate.getDate() + 1);
       }
     }
 
