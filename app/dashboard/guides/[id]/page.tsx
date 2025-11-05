@@ -322,6 +322,12 @@ export default function CalendarViewV2() {
       // Refresh items
       await fetchScheduledItems();
 
+      // If we added a base calendar item, also refresh base calendar items
+      // This ensures the item appears on subject calendars and updates blocked dates
+      if (selectedSubject === 'base') {
+        await fetchBaseCalendarItems();
+      }
+
       // Clear selection
       setSelectedItems(new Set());
     } catch (err) {
@@ -360,6 +366,9 @@ export default function CalendarViewV2() {
 
       // Refresh items
       await fetchScheduledItems();
+
+      // Also refresh base calendar items to update blocked dates
+      await fetchBaseCalendarItems();
     } catch (err) {
       console.error('Error updating scheduled item:', err);
       alert(err instanceof Error ? err.message : 'Failed to move item');
@@ -408,6 +417,9 @@ export default function CalendarViewV2() {
 
       // Refresh items
       await fetchScheduledItems();
+
+      // Also refresh base calendar items to update blocked dates
+      await fetchBaseCalendarItems();
 
       // Clear selection
       setSelectedItems(new Set());
@@ -496,6 +508,9 @@ export default function CalendarViewV2() {
 
       // Refresh items
       await fetchScheduledItems();
+
+      // Also refresh base calendar items to update blocked dates
+      await fetchBaseCalendarItems();
 
       // Clear selection
       setSelectedItems(new Set());
