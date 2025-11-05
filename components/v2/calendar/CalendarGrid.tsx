@@ -125,14 +125,25 @@ export function CalendarGrid({
         const [year, month, day] = startDateKey.split('-').map(Number);
         const startDate = new Date(year, month - 1, day); // month is 0-indexed
 
-        for (let i = 0; i < durationDays; i++) {
-          const currentDate = new Date(startDate);
-          currentDate.setDate(startDate.getDate() + i);
-          const dateKey = formatDateKey(currentDate);
+        // For base calendar items, skip weekends (since duration_days = school days only)
+        // For curriculum items, we can also skip weekends since the calendar only shows weekdays
+        let schoolDaysAdded = 0;
+        let currentDate = new Date(startDate);
 
-          const existing = map.get(dateKey) || [];
-          existing.push(item);
-          map.set(dateKey, existing);
+        while (schoolDaysAdded < durationDays) {
+          const dayOfWeek = currentDate.getDay();
+
+          // Only add weekdays (Mon-Fri = 1-5, skip Sat=6, Sun=0)
+          if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+            const dateKey = formatDateKey(currentDate);
+            const existing = map.get(dateKey) || [];
+            existing.push(item);
+            map.set(dateKey, existing);
+            schoolDaysAdded++;
+          }
+
+          // Move to next day
+          currentDate.setDate(currentDate.getDate() + 1);
         }
       } else {
         // Single-day item: add only to start date
