@@ -4,7 +4,7 @@
 
 -- Create ENUM types
 CREATE TYPE user_role AS ENUM ('admin', 'ess');
-CREATE TYPE grade_level AS ENUM ('7', '8');
+CREATE TYPE grade_level AS ENUM ('7', '8', '9');
 
 -- Users Table
 -- Stores admin and ESS user accounts

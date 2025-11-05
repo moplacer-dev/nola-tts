@@ -285,6 +285,7 @@ export default function NewGuidePage() {
                 >
                   <option value="7">7th Grade</option>
                   <option value="8">8th Grade</option>
+                  <option value="9">9th Grade</option>
                 </select>
               </div>
 

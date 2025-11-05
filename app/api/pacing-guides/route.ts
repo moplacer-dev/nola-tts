@@ -82,9 +82,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!['7', '8'].includes(grade_level)) {
+    if (!['7', '8', '9'].includes(grade_level)) {
       return NextResponse.json(
-        { error: 'Grade level must be 7 or 8' },
+        { error: 'Grade level must be 7, 8, or 9' },
         { status: 400 }
       );
     }
