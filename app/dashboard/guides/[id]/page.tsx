@@ -233,12 +233,15 @@ export default function CalendarViewV2() {
         // Parse date carefully to avoid timezone issues
         // IMPORTANT: Use local date parsing (year, month-1, day) not new Date(string)
 
-        // Convert Date object to YYYY-MM-DD string if needed
-        let dateString = item.start_date;
-        if (dateString instanceof Date) {
-          const year = dateString.getFullYear();
-          const month = String(dateString.getMonth() + 1).padStart(2, '0');
-          const day = String(dateString.getDate()).padStart(2, '0');
+        // Handle different date formats (Date object or string)
+        let dateString: string = item.start_date;
+
+        // Type guard: check if it's actually a Date object (runtime check)
+        if (dateString && typeof dateString === 'object' && 'getFullYear' in dateString) {
+          const dateObj = dateString as any as Date;
+          const year = dateObj.getFullYear();
+          const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+          const day = String(dateObj.getDate()).padStart(2, '0');
           dateString = `${year}-${month}-${day}`;
         } else if (typeof dateString === 'string' && dateString.includes('T')) {
           // If it's an ISO timestamp, extract just the date part
