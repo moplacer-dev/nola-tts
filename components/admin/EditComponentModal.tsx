@@ -36,7 +36,7 @@ export default function EditComponentModal({ component, onClose, onSuccess }: Ed
     setError('');
 
     try {
-      const response = await fetch(`/api/admin/component-templates/${component.id}`, {
+      const response = await fetch(`/api/v2/admin/component-templates/${component.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

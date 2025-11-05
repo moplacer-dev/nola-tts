@@ -212,12 +212,6 @@ export default function AdminHLPTemplatesPage() {
                   Module Name
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Subject
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Grade Level
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Sessions
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -237,7 +231,7 @@ export default function AdminHLPTemplatesPage() {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredTemplates.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
                     No templates found
                   </td>
                 </tr>
@@ -249,18 +243,8 @@ export default function AdminHLPTemplatesPage() {
                         {template.module_name}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
-                        {template.subject || 'N/A'}
-                      </span>
-                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {template.grade_level || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span className={template.session_count === 7 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
-                        {template.session_count}/7
-                      </span>
+                      {template.session_count}/7
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                       {template.enrichment_count}
@@ -288,15 +272,9 @@ export default function AdminHLPTemplatesPage() {
                       </Link>
                       <button
                         onClick={() => handleToggleActive(template.id, template.is_active)}
-                        className="text-gray-600 hover:text-gray-800 mr-4"
+                        className="text-gray-600 hover:text-gray-800"
                       >
                         {template.is_active ? 'Deactivate' : 'Activate'}
-                      </button>
-                      <button
-                        onClick={() => handleDelete(template.id, template.module_name)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        Delete
                       </button>
                     </td>
                   </tr>

@@ -255,7 +255,7 @@ export default function DocumentsPage() {
             {guides.length > 0 && (
               <div className="mb-6 flex justify-end">
                 <Link href="/dashboard/guides/new">
-                  <button className="bg-[#9333EA] hover:bg-[#7c2bc9] text-white font-medium py-2.5 px-6 rounded-md transition-colors">
+                  <button className="bg-[#9333EA] hover:bg-[#7c2bc9] text-white text-sm font-medium py-2.5 px-5 rounded-md transition-colors">
                     + Create Pacing Guide
                   </button>
                 </Link>

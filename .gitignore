@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# archived files (local development only)
+archived_v1_code/
+archived_docs/
+archived_backups/
+*.sql

@@ -185,44 +185,25 @@ export default function NewGuidePage() {
         blocks_curriculum: e.blocks_curriculum
       })));
 
-      // Create calendar events in batch with error checking
-      const promises = eventsToAdd.map(async (event, index) => {
-        console.log(`[${index + 1}/${eventsToAdd.length}] Sending API request for: "${event.event_name}" on ${event.start_date}`);
-
-        const response = await fetch('/api/calendar-events', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            pacing_guide_id: guideId,
-            event_name: event.event_name,
-            start_date: event.start_date,
-            duration_days: event.duration_days,
-            event_type: event.event_type,
-            color: event.suggested_color,
-            blocks_curriculum: event.blocks_curriculum,
-          }),
-        });
-
-        console.log(`[${index + 1}/${eventsToAdd.length}] Response status: ${response.status} for "${event.event_name}"`);
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          const errorMsg = `Failed to add event "${event.event_name}": ${errorData.error || 'Unknown error'}`;
-          console.error(`[${index + 1}/${eventsToAdd.length}] ERROR:`, errorMsg);
-          throw new Error(errorMsg);
-        }
-
-        const result = await response.json();
-        console.log(`[${index + 1}/${eventsToAdd.length}] Successfully created event ID: ${result.id}`);
-        return result;
+      // Create base calendar events directly (V2)
+      // We use a dedicated endpoint for AI-extracted events that respects exact duration
+      const response = await fetch(`/api/pacing-guides/${guideId}/add-extracted-events`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          events: eventsToAdd
+        }),
       });
 
-      console.log('Waiting for all promises to complete...');
-      const results = await Promise.all(promises);
-      console.log(`=== SUCCESS: ${results.length} events saved to database ===`);
-      console.log('Created event IDs:', results.map(r => r.id));
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add events');
+      }
 
-      // Redirect to calendar view (auto-populate removed)
+      const result = await response.json();
+      console.log(`=== SUCCESS: ${result.count} events saved to database ===`);
+
+      // Redirect to calendar view
       router.push(`/dashboard/guides/${guideId}`);
     } catch (err) {
       console.error('=== ERROR: Failed to add events ===', err);
@@ -236,12 +217,6 @@ export default function NewGuidePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-6">
-          <button
-            onClick={() => router.back()}
-            className="text-sm text-gray-600 hover:text-gray-900 mb-4"
-          >
-            ← Back to Dashboard
-          </button>
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-semibold text-gray-900">
@@ -331,7 +306,7 @@ export default function NewGuidePage() {
 
               <div>
                 <label htmlFor="district_name" className="block text-sm font-medium text-gray-700 mb-1.5">
-                  District Name
+                  District Name <span className="text-gray-500 text-xs font-normal">(optional)</span>
                 </label>
                 <input
                   id="district_name"
@@ -339,9 +314,8 @@ export default function NewGuidePage() {
                   type="text"
                   value={formData.district_name}
                   onChange={handleChange}
-                  required
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#9333EA] focus:border-transparent text-gray-900"
-                  placeholder="Enter district name"
+                  placeholder="Enter district name (optional)"
                 />
               </div>
 
@@ -503,7 +477,7 @@ export default function NewGuidePage() {
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-12">
+                      <th className="py-3 pl-4 pr-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider" style={{ width: '50px' }}>
                         <input
                           type="checkbox"
                           checked={selectedEvents.size === extractedEvents.length}
@@ -511,30 +485,21 @@ export default function NewGuidePage() {
                           className="rounded border-gray-300 text-[#9333EA] focus:ring-[#9333EA]"
                         />
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider" style={{ width: '45%' }}>
                         Event Name
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider" style={{ width: '25%' }}>
                         Start Date
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider" style={{ width: '20%' }}>
                         Duration
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                        Type
-                      </th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">
-                        Color
-                      </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider w-16">
-
                       </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {extractedEvents.map((event, index) => (
                       <tr key={index} className={selectedEvents.has(index) ? 'bg-purple-50' : 'hover:bg-gray-50'}>
-                        <td className="px-4 py-3">
+                        <td className="py-3 pl-4 pr-2">
                           <input
                             type="checkbox"
                             checked={selectedEvents.has(index)}
@@ -555,8 +520,7 @@ export default function NewGuidePage() {
                             type="date"
                             value={event.start_date}
                             onChange={(e) => updateEvent(index, 'start_date', e.target.value)}
-                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#9333EA] text-gray-900"
-                            style={{ fontFamily: 'inherit' }}
+                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#9333EA] text-gray-900 font-sans"
                           />
                         </td>
                         <td className="px-4 py-3">
@@ -567,47 +531,6 @@ export default function NewGuidePage() {
                             onChange={(e) => updateEvent(index, 'duration_days', parseInt(e.target.value))}
                             className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#9333EA] text-gray-900"
                           />
-                        </td>
-                        <td className="px-4 py-3">
-                          <select
-                            value={event.event_type}
-                            onChange={(e) => updateEvent(index, 'event_type', e.target.value)}
-                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#9333EA] text-gray-900 appearance-none bg-white"
-                            style={{
-                              backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                              backgroundPosition: 'right 0.5rem center',
-                              backgroundRepeat: 'no-repeat',
-                              backgroundSize: '1.5em 1.5em',
-                              paddingRight: '2.5rem'
-                            }}
-                          >
-                            <option value="holiday">Holiday</option>
-                            <option value="break">Break</option>
-                            <option value="school_event">School Event</option>
-                            <option value="testing">Testing</option>
-                            <option value="other">Other</option>
-                          </select>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center justify-center">
-                            <input
-                              type="color"
-                              value={event.suggested_color}
-                              onChange={(e) => updateEvent(index, 'suggested_color', e.target.value)}
-                              className="w-8 h-8 rounded cursor-pointer"
-                            />
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <button
-                            onClick={() => removeEvent(index)}
-                            className="text-gray-400 hover:text-red-600 transition-colors inline-flex items-end"
-                            title="Remove event"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
                         </td>
                       </tr>
                     ))}

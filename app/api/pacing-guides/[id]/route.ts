@@ -34,62 +34,44 @@ export async function GET(
 
     const guide = guideResult.rows[0];
 
-    // Fetch subject calendars
-    const calendarsResult = await pool.query(
-      `SELECT id, subject, created_at
-       FROM subject_calendars
-       WHERE pacing_guide_id = $1
-       ORDER BY CASE subject
-         WHEN 'base' THEN 1
-         WHEN 'ela' THEN 2
-         WHEN 'math' THEN 3
-         WHEN 'science' THEN 4
-         WHEN 'social_studies' THEN 5
-       END`,
-      [id]
-    );
-
-    // Fetch calendar events
-    const eventsResult = await pool.query(
-      `SELECT id, event_name, start_date, duration_days, event_type, is_base_event, blocks_curriculum, color
-       FROM calendar_events
-       WHERE pacing_guide_id = $1
-       ORDER BY start_date`,
-      [id]
-    );
-
-    // Fetch scheduled components for all calendars in this guide
-    // LEFT JOIN with component_templates to gracefully handle orphaned components (deleted templates)
-    // Use COALESCE to prefer overrides, fall back to template values, then to defaults
-    const componentsResult = await pool.query(
+    // Fetch all scheduled items (V2) - replaces both calendar_events and scheduled_components
+    const itemsResult = await pool.query(
       `SELECT
-         sc.id,
-         sc.subject_calendar_id,
-         sc.component_key,
-         sc.subject,
-         sc.start_date,
-         sc.duration_days,
-         sc.title_override,
-         sc."order",
-         sc.notes,
-         sc.group_id,
-         sc.display_order,
-         COALESCE(ct.display_name, 'Deleted Component') as display_name,
-         COALESCE(sc.color_override, ct.color, '#6B7280') as color
-       FROM scheduled_components sc
-       JOIN subject_calendars cal ON sc.subject_calendar_id = cal.id
-       LEFT JOIN component_templates ct ON sc.component_key = ct.component_key
-       WHERE cal.pacing_guide_id = $1
-       ORDER BY sc.start_date, sc.display_order`,
+         si.id,
+         si.guide_id,
+         si.calendar_type,
+         si.template_id,
+         si.component_key,
+         si.start_date,
+         si.duration_days,
+         si.title_override,
+         si.color_override,
+         si.metadata,
+         si.blocks_curriculum,
+         si.source,
+         si.placement_group_id,
+         si.display_order,
+         si.created_at,
+         t.display_name,
+         t.color as template_color,
+         t.expansion_type,
+         t.expansion_config,
+         t.default_duration_days,
+         t.metadata_fields
+       FROM scheduled_items_v2 si
+       LEFT JOIN component_templates_v2 t ON si.template_id = t.id
+       WHERE si.guide_id = $1
+       ORDER BY si.start_date, si.display_order`,
       [id]
     );
 
-    // Combine the data
+    // Note: V2 doesn't use separate tables for calendars/events/components
+    // Everything is in scheduled_items_v2 with calendar_type field
+
+    // Combine the data (V2 format)
     const response = {
       ...guide,
-      calendars: calendarsResult.rows,
-      events: eventsResult.rows,
-      scheduled_components: componentsResult.rows,
+      scheduled_items: itemsResult.rows,
     };
 
     return NextResponse.json(response);
@@ -135,30 +117,15 @@ export async function DELETE(
       );
     }
 
-    // Delete in order to respect foreign key constraints:
+    // Delete in order to respect foreign key constraints (V2):
 
-    // 1. Delete scheduled components (references subject_calendars)
+    // 1. Delete all scheduled items (V2 - replaces components, events, calendars)
     await client.query(
-      `DELETE FROM scheduled_components
-       WHERE subject_calendar_id IN (
-         SELECT id FROM subject_calendars WHERE pacing_guide_id = $1
-       )`,
+      'DELETE FROM scheduled_items_v2 WHERE guide_id = $1',
       [id]
     );
 
-    // 2. Delete calendar events (references pacing_guides)
-    await client.query(
-      'DELETE FROM calendar_events WHERE pacing_guide_id = $1',
-      [id]
-    );
-
-    // 3. Delete subject calendars (references pacing_guides)
-    await client.query(
-      'DELETE FROM subject_calendars WHERE pacing_guide_id = $1',
-      [id]
-    );
-
-    // 4. Delete the pacing guide itself
+    // 2. Delete the pacing guide itself
     await client.query(
       'DELETE FROM pacing_guides WHERE id = $1',
       [id]

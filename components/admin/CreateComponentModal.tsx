@@ -29,7 +29,7 @@ export default function CreateComponentModal({ onClose, onSuccess }: CreateCompo
       formData.display_name.toLowerCase().replace(/[^a-z0-9]+/g, '_') + '_' + Date.now();
 
     try {
-      const response = await fetch('/api/admin/component-templates', {
+      const response = await fetch('/api/v2/admin/component-templates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

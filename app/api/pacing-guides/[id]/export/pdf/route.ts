@@ -64,12 +64,61 @@ function calculateWeeks(firstDay: string, lastDay: string) {
   return weeks;
 }
 
+// Substitute metadata placeholders in title for display
+function substituteMetadataInTitle(title: string, metadata: any): string {
+  let result = title;
+
+  // Replace {rotation} with actual rotation_number
+  if (metadata?.rotation_number !== undefined) {
+    result = result.replace(/{rotation}/g, metadata.rotation_number.toString());
+  }
+
+  // Replace {unit} with actual unit_number
+  if (metadata?.unit_number !== undefined) {
+    result = result.replace(/{unit}/g, metadata.unit_number.toString());
+  }
+
+  // Replace {standard_code}
+  if (metadata?.standard_code !== undefined) {
+    result = result.replace(/{standard_code}/g, metadata.standard_code.toString());
+  }
+
+  // Replace {lesson}
+  if (metadata?.lesson_number !== undefined) {
+    result = result.replace(/{lesson}/g, metadata.lesson_number.toString());
+  }
+
+  // Replace line breaks with commas for PDF export
+  result = result.replace(/\\n/g, ', ').replace(/\n/g, ', ');
+
+  return result;
+}
+
+// Truncate long titles to max length
+function truncateTitle(title: string, maxLength: number = 35): string {
+  if (title.length <= maxLength) return title;
+  return title.substring(0, maxLength - 1) + '…';
+}
+
+// Convert hex color to rgba with opacity
+function hexToRGBA(hex: string, alpha: number): string {
+  // Remove # if present
+  hex = hex.replace('#', '');
+
+  // Parse hex values
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 // Generate HTML for a calendar
 function generateCalendarHTML(
   guide: any,
   subject: string,
-  events: any[],
-  components: any[]
+  baseItems: any[], // Items from base calendar (holidays, etc.)
+  subjectItems: any[] // Items from subject calendar (curriculum components)
 ) {
   const subjectLabels: Record<string, string> = {
     base: 'Base Calendar',
@@ -81,26 +130,29 @@ function generateCalendarHTML(
 
   const weeks = calculateWeeks(guide.first_day, guide.last_day);
 
-  // Helper to get events for a date
-  const getEventsForDate = (date: Date) => {
-    return events.filter((event) => {
-      const eventStart = new Date(event.start_date);
-      const eventEnd = addSchoolDays(eventStart, event.duration_days - 1);
-      return isSchoolDay(date) && date >= eventStart && date <= eventEnd;
+  // Helper to get base items (events) for a date
+  const getBaseItemsForDate = (date: Date) => {
+    return baseItems.filter((item) => {
+      const itemStart = new Date(item.start_date);
+      const itemEnd = addSchoolDays(itemStart, item.duration_days - 1);
+      return isSchoolDay(date) && date >= itemStart && date <= itemEnd;
     });
   };
 
-  // Helper to get components for a date
-  const getComponentsForDate = (date: Date) => {
-    return components.filter((component) => {
-      const componentStart = new Date(component.start_date);
-      const componentEnd = addSchoolDays(componentStart, component.duration_days - 1);
-      return isSchoolDay(date) && date >= componentStart && date <= componentEnd;
+  // Helper to get subject items (components) for a date
+  const getSubjectItemsForDate = (date: Date) => {
+    return subjectItems.filter((item) => {
+      const itemStart = new Date(item.start_date);
+      const itemEnd = addSchoolDays(itemStart, item.duration_days - 1);
+      return isSchoolDay(date) && date >= itemStart && date <= itemEnd;
     });
   };
 
-  // Format date for display with year
-  const formatDate = (date: Date) => `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
+  // Format date for display with 2-digit year
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear().toString().slice(-2); // Last 2 digits
+    return `${date.getMonth() + 1}/${date.getDate()}/${year}`;
+  };
 
   const firstDay = new Date(guide.first_day);
   const lastDay = new Date(guide.last_day);
@@ -117,187 +169,210 @@ function generateCalendarHTML(
       box-sizing: border-box;
     }
 
+    @page {
+      size: Letter portrait;
+      margin: 0.35in 0.4in;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
       font-size: 9px;
-      line-height: 1.2;
-      padding: 20px;
+      line-height: 1.25;
       background: white;
+      color: #111827;
+    }
+
+    .subject-section {
+      page-break-after: always;
+      page-break-inside: avoid;
     }
 
     .header {
-      margin-bottom: 15px;
+      margin-bottom: 6px;
+      page-break-inside: avoid;
+      page-break-after: avoid;
+    }
+
+    .calendar-container {
+      orphans: 3;
+      widows: 3;
     }
 
     .school-name {
-      font-size: 18px;
+      font-size: 15px;
       font-weight: 600;
       color: #111827;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
     }
 
     .school-info {
-      font-size: 11px;
+      font-size: 9px;
       color: #6B7280;
     }
 
-    .subject-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: #9333EA;
-      margin-bottom: 10px;
-    }
-
-    table {
+    /* CSS Grid Calendar Container */
+    .calendar-container {
       width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
+      display: grid;
+      grid-template-columns: 45px repeat(5, 1fr);
+      gap: 0;
+      border: 0.5px solid #000000;
     }
 
-    th, td {
-      border: 1px solid #D1D5DB;
-      padding: 4px;
-      vertical-align: top;
-      text-align: left;
-    }
-
-    th {
+    /* Header Row */
+    .header-cell {
       background-color: #F9FAFB;
+      color: #374151;
+      padding: 4px 3px;
       font-weight: 600;
-      font-size: 10px;
-      color: #111827;
-      padding: 6px 4px;
+      font-size: 9px;
+      text-align: center;
+      border: 0.5px solid #000000;
     }
 
+    /* Week Cell (left column) */
     .week-cell {
       background-color: #F9FAFB;
-      width: 60px;
-      font-size: 9px;
+      padding: 3px 2px;
+      font-size: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      min-height: 38px;
+      border: 0.5px solid #000000;
     }
 
     .week-number {
       font-weight: 600;
-      color: #111827;
+      color: #374151;
+      margin-bottom: 1px;
+      font-size: 8px;
     }
 
     .week-date {
       color: #6B7280;
-      font-size: 8px;
-      margin-top: 2px;
+      font-size: 7px;
     }
 
+    /* Day Cells */
     .day-cell {
-      min-height: 60px;
-      width: calc((100% - 60px) / 5);
-    }
-
-    .out-of-range {
-      background-color: #E5E7EB;
-    }
-
-    .event-item, .component-item {
-      padding: 4px 6px;
-      margin-bottom: 3px;
-      border-radius: 2px;
-      font-size: 10px;
-      line-height: 1.3;
-      word-wrap: break-word;
-      white-space: pre-line;
+      background-color: white;
+      padding: 3px;
+      min-height: 38px;
       display: flex;
-      align-items: center;
+      flex-direction: column;
+      gap: 2px;
+      border: 0.5px solid #000000;
+      page-break-inside: avoid;
     }
 
-    .event-item {
+    .day-cell.out-of-range {
+      background-color: #F3F4F6;
+    }
+
+    /* Items in cells - match app styling */
+    .item {
+      padding: 2px 4px;
+      font-size: 9.5px;
+      line-height: 1.25;
       font-weight: 500;
+      border-radius: 3px;
+      word-wrap: break-word;
       color: #111827;
-      border-style: dashed;
-      border-width: 0 0 0 3px;
-    }
-
-    .component-item {
-      color: #374151;
-      border-style: solid;
-      border-width: 0 0 0 3px;
     }
 
     .page-break {
       page-break-after: always;
     }
+
+    @media print {
+      .subject-section {
+        page-break-after: always;
+        page-break-inside: avoid;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="header">
-    <div class="school-name">${guide.school_name} ${subjectLabels[subject]} Pacing Guide</div>
-    <div class="school-info">
-      ${guide.district_name} • Grade ${guide.grade_level} •
-      ${formatDate(firstDay)} - ${formatDate(lastDay)}
+  <div class="subject-section">
+    <div class="header">
+      <div class="school-name">${guide.school_name} ${subjectLabels[subject]} Pacing Guide</div>
+      <div class="school-info">
+        ${guide.district_name} • Grade ${guide.grade_level} •
+        ${formatDate(firstDay)} - ${formatDate(lastDay)}
+      </div>
     </div>
-  </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th class="week-cell">Week</th>
-        <th>Monday</th>
-        <th>Tuesday</th>
-        <th>Wednesday</th>
-        <th>Thursday</th>
-        <th>Friday</th>
-      </tr>
-    </thead>
-    <tbody>
+    <div class="calendar-container">
+      <!-- Header Row -->
+      <div class="header-cell">Week</div>
+      <div class="header-cell">Monday</div>
+      <div class="header-cell">Tuesday</div>
+      <div class="header-cell">Wednesday</div>
+      <div class="header-cell">Thursday</div>
+      <div class="header-cell">Friday</div>
 `;
 
   weeks.forEach((week) => {
-    html += '<tr>';
+    // Week cell
     html += `
-      <td class="week-cell">
-        <div class="week-number">Week ${week.weekNumber}</div>
+      <div class="week-cell">
+        <div class="week-number">W${week.weekNumber}</div>
         <div class="week-date">${formatDate(week.startDate)}</div>
-      </td>
+      </div>
     `;
 
+    // Day cells (5 per week)
     week.days.forEach((day) => {
       const isBeforeStart = day < firstDay;
       const isAfterEnd = day > lastDay;
-      const dayEvents = getEventsForDate(day);
-      const dayComponents = getComponentsForDate(day);
+      const dayBaseItems = getBaseItemsForDate(day);
+      const daySubjectItems = getSubjectItemsForDate(day);
 
-      html += `<td class="day-cell ${isBeforeStart || isAfterEnd ? 'out-of-range' : ''}">`;
+      html += `<div class="day-cell ${isBeforeStart || isAfterEnd ? 'out-of-range' : ''}">`;
 
-      // Render events
-      dayEvents.forEach((event) => {
-        const bgColor = event.color || '#9CA3AF';
-        const opacity = subject === 'base' ? '1' : '0.3';
+      // Render base items (holidays, events)
+      dayBaseItems.forEach((item) => {
+        const rawTitle = item.title_override || item.display_name || 'Event';
+        const title = substituteMetadataInTitle(rawTitle, item.metadata);
+        const baseColor = item.color_override || item.color || '#6B7280';
+
+        // Convert hex to rgba with 25% opacity for subtle look (like app)
+        const rgba = hexToRGBA(baseColor, 0.25);
+
         html += `
-          <div class="event-item" style="background-color: ${bgColor}; opacity: ${opacity}; border-left-color: ${bgColor};">
-            ${event.event_name}
+          <div class="item" style="background-color: ${rgba};">
+            ${title}
           </div>
         `;
       });
 
-      // Render components (only for subject calendars, not base)
+      // Render subject items (curriculum components - only for subject calendars, not base)
       if (subject !== 'base') {
-        dayComponents.forEach((component) => {
-          const title = component.title_override || component.display_name;
-          const color = component.color_override || component.color || '#9CA3AF';
+        daySubjectItems.forEach((item) => {
+          const rawTitle = item.title_override || item.display_name || 'Component';
+          const title = substituteMetadataInTitle(rawTitle, item.metadata);
+          const baseColor = item.color_override || item.color || '#A78BFA';
+
+          // Reduce vibrancy with 30% opacity for softer, more muted colors (like app)
+          const rgba = hexToRGBA(baseColor, 0.30);
+
           html += `
-            <div class="component-item" style="background-color: ${color}20; border-left-color: ${color};">
+            <div class="item" style="background-color: ${rgba};">
               ${title}
             </div>
           `;
         });
       }
 
-      html += '</td>';
+      html += '</div>';
     });
-
-    html += '</tr>';
   });
 
   html += `
-    </tbody>
-  </table>
+    </div> <!-- end calendar-container -->
+  </div> <!-- end subject-section -->
 </body>
 </html>
 `;
@@ -343,19 +418,21 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    // Fetch calendars
-    const calendarsResult = await pool.query(
-      'SELECT * FROM subject_calendars WHERE pacing_guide_id = $1 ORDER BY subject',
+    // Fetch all scheduled items (V2) for this guide
+    // We'll filter by calendar_type later
+    const itemsResult = await pool.query(
+      `SELECT
+        si.*,
+        ct.display_name,
+        ct.color,
+        ct.category
+       FROM scheduled_items_v2 si
+       LEFT JOIN component_templates_v2 ct ON si.template_id = ct.id
+       WHERE si.guide_id = $1
+       ORDER BY si.calendar_type, si.start_date`,
       [id]
     );
-    const calendars = calendarsResult.rows;
-
-    // Fetch events
-    const eventsResult = await pool.query(
-      'SELECT * FROM calendar_events WHERE pacing_guide_id = $1',
-      [id]
-    );
-    const events = eventsResult.rows;
+    const allItems = itemsResult.rows;
 
     // Determine which subjects to export (exclude base from "all")
     const subjects = subject === 'all'
@@ -366,26 +443,12 @@ export async function POST(
     const htmlPages: string[] = [];
 
     for (const subj of subjects) {
-      const calendar = calendars.find((c) => c.subject === subj);
-      if (!calendar) continue;
+      // Filter items for this calendar_type
+      const baseItems = allItems.filter(item => item.calendar_type === 'base');
+      const subjectItems = allItems.filter(item => item.calendar_type === subj);
 
-      // Fetch scheduled components for this subject
-      let components = [];
-      if (subj !== 'base') {
-        const componentsResult = await pool.query(
-          `SELECT
-            sc.*,
-            ct.display_name,
-            ct.color
-           FROM scheduled_components sc
-           LEFT JOIN component_templates ct ON sc.component_key = ct.component_key
-           WHERE sc.subject_calendar_id = $1`,
-          [calendar.id]
-        );
-        components = componentsResult.rows;
-      }
-
-      const html = generateCalendarHTML(guide, subj, events, components);
+      // For subject calendars, pass both base items (events) and subject items (components)
+      const html = generateCalendarHTML(guide, subj, baseItems, subjectItems);
       htmlPages.push(html);
     }
 
@@ -410,15 +473,17 @@ export async function POST(
     await page.setContent(combinedHTML, { waitUntil: 'networkidle0' });
 
     const pdfBuffer = await page.pdf({
-      format: 'A4',
-      landscape: true,
+      format: 'Letter', // US standard (8.5" x 11")
+      landscape: false, // Portrait
       margin: {
-        top: '0.5cm',
-        right: '0.5cm',
-        bottom: '0.5cm',
-        left: '0.5cm',
+        top: '0.35in',
+        right: '0.4in',
+        bottom: '0.35in',
+        left: '0.4in',
       },
       printBackground: true,
+      scale: 0.85, // Scale down to fit more content
+      preferCSSPageSize: true, // Respect CSS @page rules
     });
 
     await browser.close();

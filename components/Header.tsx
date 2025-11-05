@@ -12,8 +12,8 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link href="/dashboard" className="flex items-center gap-0 cursor-pointer hover:opacity-80 transition-opacity">
-            {/* Teal Accent Bar */}
-            <div className="w-1 h-8 bg-[#0D9488] rounded-full mr-3"></div>
+            {/* Purple Accent Bar */}
+            <div className="w-1 h-8 bg-[#9333EA] rounded-full mr-3"></div>
             {/* Logo Text */}
             <h1 className="text-xl font-semibold text-gray-900 leading-tight">
               NOLA.ess
@@ -30,7 +30,7 @@ export default function Header() {
             {session?.user?.role === 'admin' && (
               <Link
                 href="/admin/users"
-                className="bg-[#9333EA] hover:bg-[#7928CA] text-white text-sm font-medium py-2 px-4 rounded-md transition-colors"
+                className="border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 text-sm font-medium py-2 px-4 rounded-md transition-colors bg-transparent"
               >
                 Admin
               </Link>

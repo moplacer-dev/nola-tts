@@ -8,8 +8,9 @@ A comprehensive pacing guide and calendar management system designed for Educati
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Getting Started](#getting-started)
-- [Component Library](#component-library)
-- [Database Management](#database-management)
+- [Architecture](#architecture)
+- [Database Schema](#database-schema)
+- [Component System](#component-system)
 - [Recent Updates](#recent-updates)
 - [Documentation](#documentation)
 
@@ -21,8 +22,9 @@ The NOLA ESS Pacing Guide Application helps educators create structured academic
 - **Subject-specific calendars** (ELA, Math, Science, Social Studies)
 - **Base calendar events** (holidays, breaks, professional development)
 - **Pre-built curriculum components** aligned with Language!Live and other programs
-- **Export capabilities** (PDF, DOCX, CSV, Excel)
-- **Multi-level access** (district, school, classroom levels)
+- **Multi-day component expansion** with intelligent date skipping
+- **Export capabilities** (PDF)
+- **Versioning and re-pacing** for flexible calendar adjustments
 
 ---
 
@@ -30,43 +32,53 @@ The NOLA ESS Pacing Guide Application helps educators create structured academic
 
 ### 📅 Calendar Management
 - Create pacing guides with flexible start/end dates
-- Manage multiple subject calendars in one guide
-- Drag-and-drop component placement with multi-select support
+- Manage multiple subject calendars in one unified view
+- **Drag-and-drop** component placement from library
+- **Multi-select** with Cmd/Ctrl+Click for bulk operations
 - Visual week-by-week view with color-coded components
 - Intelligent weekend and blocked date handling (auto-skip for multi-day components)
-- Click-to-select with keyboard shortcuts for fast editing
+- **Re-pacing**: Shift entire calendars forward/backward while respecting blocked dates
+- **Versioning**: Save snapshots of calendars and restore previous versions
+
+### 🧩 Component System (V2)
+
+The V2 architecture introduces a flexible **template expansion system** that supports four expansion types:
+
+#### Expansion Types
+1. **Single Day** (`single`) - Traditional 1-day components
+2. **Multi-Sequence** (`multi_sequence`) - Named parts that expand sequentially (e.g., "Lesson 1", "Lesson 2")
+3. **Multi-Rotation** (`multi_rotation`) - Session-based rotation (e.g., "Session 1 of 8", "Session 2 of 8")
+4. **Multi-Grouped** (`multi_grouped`) - Grouped items with repeat patterns (e.g., "Unit 1, Day 1" × 3 times)
+
+#### Component Features
+- **180+ pre-built templates** across all subjects
+- **Metadata fields**: Support for rotation numbers, unit numbers, lesson numbers, standards
+- **Title overrides**: Customize display names while preserving template link
+- **Color overrides**: Change colors for specific instances
+- **Grouped editing**: Update metadata across all related items
+- **Weekend/break skipping**: Multi-day components automatically avoid blocked dates
 
 ### 📚 Curriculum Components
-- **162 pre-built components** across all subjects
-- **ELA (23 components)**: Fully aligned with Language!Live Program Guide
-  - Level 1 & Level 2 instruction support
-  - Word Training (WT) & Text Training (TT) components
-  - Benchmark assessments (BOY, MOY, EOY)
-  - Unit pre/post tests
-  - Writing projects
-- **Math (48 components)**: IPL units with STEPS integration
-- **Science (11 components)**: Module rotations and PEAR assessments
-- **Social Studies (41 components)**: History Alive! curriculum units
-  - Through Modern Times (9 units)
-  - Through Industrialism (10 units)
-  - World Through 1750 (16 units)
-- **Base Calendar (39 components)**: Holidays, breaks, professional development
 
-### 🎨 Component Features
-- Color-coded categories for easy visual identification
-- Multi-day components with intelligent weekend/break skipping
+- **ELA**: Language!Live modules with multi-day expansion
+- **Math**: IPL units and STEPS integration
+- **Science**: Module rotations and PEAR assessments
+- **Social Studies**: History Alive! curriculum units (Modern, Industrialism, World 1750)
+- **Base Calendar**: Holidays, breaks, professional development, school events
+
+### 🎨 UI/UX Features
+- **Component Library**: Filter by category, search by name
 - **Multi-select**: Click to select, Cmd/Ctrl+Click to add to selection
+- **Bulk actions**: Delete, change color, move multiple components at once
 - **Keyboard shortcuts**: Delete/Backspace to remove, Escape to clear selection
-- **Bulk actions**: Delete multiple components at once via floating badge
-- Reorderable components within cells (up/down arrows)
-- Title overrides and custom notes
-- Component duplication and bulk adjustments
+- **Three-dot menu**: Edit individual component titles and metadata
+- **Extend feature**: "Repeat for X Days" to duplicate components
+- **Drag preview**: Visual feedback showing component color during drag
 
-### 📊 Export & Sharing
-- **PDF Export**: Professional formatted documents
-- **DOCX Export**: Editable Microsoft Word documents
-- **CSV Export**: Data import for other systems
-- **Excel Export**: Full spreadsheet with formulas
+### 📊 Export & Versioning
+- **PDF Export**: Professional formatted documents with muted colors (30% opacity)
+- **Versioning**: Save calendar snapshots with auto-generated version labels
+- **Re-pacing**: Shift calendars by X school days while respecting weekends/holidays
 
 ---
 
@@ -74,11 +86,10 @@ The NOLA ESS Pacing Guide Application helps educators create structured academic
 
 - **Frontend**: Next.js 14 (App Router), React, TypeScript
 - **Styling**: Tailwind CSS
-- **Database**: PostgreSQL
+- **Database**: PostgreSQL with JSONB support
 - **Authentication**: NextAuth.js
-- **PDF Generation**: jsPDF
-- **Document Export**: docx, xlsx, papaparse
-- **UI Components**: shadcn/ui, Radix UI
+- **PDF Generation**: Puppeteer with custom HTML/CSS rendering
+- **UI Components**: Custom components with Radix UI primitives
 
 ---
 
@@ -118,198 +129,307 @@ The NOLA ESS Pacing Guide Application helps educators create structured academic
    createdb nola_ess
    ```
 
-   Run migrations (in order):
+   Run V2 schema:
    ```bash
-   psql -d nola_ess -f scripts/schema-component-templates.sql
-   psql -d nola_ess -f scripts/schema-calendar-events.sql
-   psql -d nola_ess -f scripts/add-metadata-column.sql
-   psql -d nola_ess -f scripts/add-group-id-column.sql
-   psql -d nola_ess -f scripts/add-display-order.sql
-   psql -d nola_ess -f scripts/add-color-override.sql
+   psql -d nola_ess -f scripts/schema-v2.sql
    ```
 
-5. **Seed component templates**
+5. **Create an admin user**
    ```bash
-   node scripts/seed-components.js
+   node scripts/create-admin.js
    ```
 
-   When prompted "Delete and reseed? (yes/no):", type `yes`
+   Follow the prompts to create your admin account.
 
-6. **Start the development server**
+6. **Seed V2 component templates**
+   ```bash
+   node scripts/migrate-templates-to-v2.js
+   ```
+
+7. **Start the development server**
    ```bash
    npm run dev
    ```
 
-7. **Open the application**
+8. **Open the application**
 
    Navigate to `http://localhost:3000`
 
 ---
 
-## Component Library
+## Architecture
 
-### Understanding Component Types
+### V2 System Design
 
-Components can be **simple** (single-day) or **multi-day** (grouped). See [Component Creation Guide](./components/COMPONENT_CREATION_GUIDE.md) for detailed information.
+The V2 architecture uses a **unified data model** that simplifies the original V1 multi-table approach:
 
-### ELA Components (Language!Live Aligned)
+#### V1 → V2 Migration
+- ❌ **V1**: 4 separate tables (`component_templates`, `scheduled_components`, `calendar_events`, `subject_calendars`)
+- ✅ **V2**: 2 core tables (`component_templates_v2`, `scheduled_items_v2`)
 
-#### Setup & Administrative (4)
-- **L!L: Roster Students** - Setup student accounts in online platform
-- **L!L: Benchmark Grouping** - Sort students into Level 1 or Level 2
-- **L!L Startup** (3 days) - Week 1 program introduction
-- **Data Conference** - Teacher dashboard review and practice activity assignment
-
-#### Core Instruction (3)
-- **Language! Live Unit (Lessons 1-10, 2 Days)** (22 days) - Full unit with TT/WT rotation
-- **Language! Live Unit (Lessons 1-10, Single Day)** (10 days) - Accelerated pacing
-- **L!L Unit #, Lesson #** - Flexible single lesson
-
-#### Benchmark Assessments (3)
-- **BOY Benchmark: PAR2, TOSCRF-2, TWS-5** - Beginning of year placement
-- **MOY Benchmark: PAR2, TOSCRF-2, TWS-5** - Mid-year progress check
-- **EOY Benchmark: PAR2, TOSCRF-2, TWS-5** - End of year growth measure
-
-#### Unit Assessments (2)
-- **L!L Unit Pre-Test** - Baseline knowledge check
-- **L!L Unit Post-Test/Formative** - Required unit completion assessment
-
-#### Writing & Support (5)
-- **L!L Writing Project** (5-10 days) - 8 project types per level
-- **L!L Make-Up** - Missed instruction recovery
-- **L!L ReadingScape** - Online wide reading
-- **Flex Day** - Review, reteaching, enrichment
-- **State Testing Prep** - Test preparation (LEAP, STAAR, etc.)
-
-#### Optional Tools (1)
-- **L!L: Assign Practice Activities** - Vocabulary, Power Pass, Content Mastery
-
-### Understanding Language!Live Levels
-
-**Level 1**: Students significantly below grade level
-- Focus: Foundational phonics, basic decoding, consonant/vowel sounds
-
-**Level 2**: Students approaching grade level
-- Focus: Morphology, complex text comprehension, syllable types
-
-**90-Minute Model**:
-- Level 1 students: TT (teacher-directed) while Level 2 does WT (online)
-- Then rotate: Level 1 does WT while Level 2 does TT
+#### Key Improvements
+1. **Template Expansion**: Components expand on placement rather than storage
+2. **Unified Scheduled Items**: One table for all calendar items (base events + curriculum)
+3. **Flexible Metadata**: JSONB fields support any component type
+4. **Placement Groups**: Grouped items share a UUID for batch operations
+5. **Version Snapshots**: JSONB snapshots for calendar versioning
 
 ---
 
-## Database Management
+## Database Schema
 
-### Seeding Components
+### Core Tables
 
-To add or update component templates:
+#### `users`
+```sql
+- id (UUID, primary key)
+- name (VARCHAR)
+- email (VARCHAR, unique)
+- password (VARCHAR, hashed)
+- created_at (TIMESTAMP)
+```
 
-1. Edit `scripts/seed-components.js`
-2. Run the seeder:
-   ```bash
-   node scripts/seed-components.js
-   ```
+#### `pacing_guides`
+```sql
+- id (UUID, primary key)
+- user_id (UUID, FK → users.id)
+- school_name (VARCHAR)
+- district_name (VARCHAR)
+- grade_level (VARCHAR: '7' or '8')
+- first_day (DATE)
+- last_day (DATE)
+- created_at (TIMESTAMP)
+- updated_at (TIMESTAMP)
+```
 
-### Key Tables
+#### `component_templates_v2`
+```sql
+- id (UUID, primary key)
+- component_key (VARCHAR, unique) - Stable identifier
+- subject (VARCHAR) - 'base', 'ela', 'math', 'science', 'social_studies'
+- display_name (VARCHAR) - User-facing name
+- description (TEXT) - Optional usage notes
+- color (VARCHAR) - Hex color code
+- expansion_type (VARCHAR) - 'single', 'multi_sequence', 'multi_rotation', 'multi_grouped'
+- expansion_config (JSONB) - Configuration for multi-day expansion
+- default_duration_days (INTEGER) - Total days when expanded
+- metadata_fields (TEXT[]) - Array of metadata field names
+- category (VARCHAR) - For library filtering
+- is_system (BOOLEAN) - System template vs custom
+- is_active (BOOLEAN) - Active/archived status
+- user_id (UUID, FK → users.id, nullable) - For custom templates
+- created_at (TIMESTAMP)
+- updated_at (TIMESTAMP)
+```
 
-- **component_templates**: Pre-built curriculum components
-- **pacing_guides**: User-created calendars
-- **subject_calendars**: Subject-specific calendars (ELA, Math, etc.)
-- **scheduled_components**: Components placed on calendars
-- **calendar_events**: Base calendar events (holidays, breaks)
+#### `scheduled_items_v2`
+```sql
+- id (UUID, primary key)
+- guide_id (UUID, FK → pacing_guides.id)
+- calendar_type (VARCHAR) - 'base', 'ela', 'math', 'science', 'social_studies'
+- template_id (UUID, FK → component_templates_v2.id, nullable)
+- component_key (VARCHAR) - Denormalized for performance
+- start_date (DATE)
+- duration_days (INTEGER)
+- title_override (VARCHAR, nullable) - Custom title
+- color_override (VARCHAR, nullable) - Custom color
+- metadata (JSONB) - {rotation: "1", unit: "3", lesson: "2", etc.}
+- blocks_curriculum (BOOLEAN) - For base calendar events
+- source (VARCHAR) - 'manual', 'pdf_extraction', 'library'
+- placement_group_id (UUID) - Groups related items
+- group_index (INTEGER, nullable) - Position within group
+- display_order (INTEGER) - Order within same date
+- created_at (TIMESTAMP)
+- updated_at (TIMESTAMP)
+```
 
-### Component Metadata
+#### `pacing_guide_versions`
+```sql
+- id (UUID, primary key)
+- guide_id (UUID, FK → pacing_guides.id)
+- version_number (INTEGER) - Auto-incrementing per guide
+- version_label (VARCHAR) - Auto-generated description
+- snapshot_data (JSONB) - Full snapshot of scheduled_items_v2
+- created_at (TIMESTAMP)
+- created_by (UUID, FK → users.id)
+```
 
-Components use JSON metadata for advanced features:
+---
+
+## Component System
+
+### Template Expansion Examples
+
+#### Single Day
 ```json
 {
-  "is_multi": true,
-  "sub_components": [
-    { "title": "Lesson 1", "duration": 1 },
-    { "title": "Lesson 2", "duration": 1 }
-  ]
+  "expansion_type": "single",
+  "default_duration_days": 1
 }
+```
+Expands to: 1 item on the drop date
+
+#### Multi-Sequence
+```json
+{
+  "expansion_type": "multi_sequence",
+  "expansion_config": {
+    "items": [
+      {"title": "Lesson 1", "days": 1},
+      {"title": "Lesson 2", "days": 1},
+      {"title": "Lesson 3", "days": 1}
+    ]
+  },
+  "default_duration_days": 3
+}
+```
+Expands to: 3 items ("Lesson 1", "Lesson 2", "Lesson 3") starting on drop date
+
+#### Multi-Rotation
+```json
+{
+  "expansion_type": "multi_rotation",
+  "expansion_config": {
+    "sessions": 8,
+    "days_per_session": 1
+  },
+  "default_duration_days": 8,
+  "metadata_fields": ["rotation_number"]
+}
+```
+Expands to: 8 items ("Session 1 of 8", "Session 2 of 8", etc.)
+
+#### Multi-Grouped
+```json
+{
+  "expansion_type": "multi_grouped",
+  "expansion_config": {
+    "items": [
+      {"title": "Day 1", "days": 1, "repeat": 3},
+      {"title": "Day 2", "days": 1, "repeat": 3}
+    ]
+  },
+  "default_duration_days": 6,
+  "metadata_fields": ["unit_number"]
+}
+```
+Expands to: 6 items (Day 1 × 3, then Day 2 × 3)
+
+### Metadata Field Substitution
+
+Templates can include placeholders in titles:
+- `{rotation}` → Replaced with rotation_number from metadata
+- `{unit}` → Replaced with unit_number from metadata
+- `{lesson}` → Replaced with lesson_number from metadata
+- `{standard}` → Replaced with standard_code from metadata
+
+Example:
+```
+Template: "Unit {unit}, Lesson {lesson}"
+Metadata: {"unit": "3", "lesson": "2"}
+Result: "Unit 3, Lesson 2"
 ```
 
 ---
 
 ## Recent Updates
 
-### October 2024: Social Studies & Multi-Select Features
+### November 2024: V2 Migration Complete
 
-**Social Studies Component Overhaul:**
-- Converted 173 individual components → 41 unit components (using `is_multi` pattern)
-- **Through Modern Times**: 9 units (109 instructional days)
-- **Through Industrialism**: 10 units (113 instructional days)
-- **World Through 1750**: 16 units (182 instructional days)
-- Components now automatically skip weekends and blocked dates (like Math/ELA/Science)
-- Maintained concise display names (e.g., "Unit 1, Lesson 2") for clean calendar view
-- Each unit expands into daily sub-components that can be moved independently
+**Major Architectural Changes:**
+- ✅ Migrated from 4-table V1 system to 2-table V2 system
+- ✅ Implemented template expansion system with 4 expansion types
+- ✅ Added versioning system with JSONB snapshots
+- ✅ Implemented re-pacing with intelligent date shifting
+- ✅ Migrated PDF export to V2 with professional styling
+- ✅ Updated all admin pages to V2 API
+- ✅ Removed all V1 code and database tables
 
-**Multi-Select Functionality:**
-- **Click-to-select**: Click any component to select, click again to deselect
-- **Multi-select**: Cmd/Ctrl+Click to add multiple components to selection
-- **Visual feedback**: Selected components show darker border + shadow elevation
-- **Mini floating badge**: Shows selection count with quick-access delete button
-- **Keyboard shortcuts**:
-  - Delete/Backspace: Delete selected components
-  - Escape: Clear selection
-- **Bulk delete**: Remove multiple components at once with single confirmation
-- Three-dot menu (⋮) for editing individual components
+**New Features:**
+- **Re-pacing**: Shift calendars forward/backward by X school days
+- **Versioning**: Auto-generated version snapshots with restore capability
+- **Extend Feature**: "Repeat for X Days" to duplicate components
+- **Grouped Metadata Editing**: Update unit/rotation numbers across all related items
+- **PDF Export V2**: Portrait layout, 30% color opacity, thin borders, professional typography
 
-**UX Improvements:**
-- Removed cluttered red X delete button
-- Streamlined component actions (three-dot menu + reorder arrows)
-- Single confirmation dialog (no more double popups)
-- Components use their own colors when selected (not generic blue)
-
----
-
-### October 2024: ELA Component Overhaul
-
-**What Changed:**
-- Updated all 23 ELA components to align with Language!Live Program Guide 2022
-- Changed terminology from "Group 1/Group 2" to "Level 1/Level 2"
-- Added comprehensive benchmark assessments (BOY, MOY, EOY)
-- Separated Writing Projects from Word Training
-- Enhanced component descriptions with usage guidance
-
-**New Components Added:**
-1. L!L: Roster Students
-2. L!L: Benchmark Grouping
-3. BOY/MOY/EOY Comprehensive Benchmarks (3 total)
-4. L!L Unit Pre-Test
-5. L!L Unit Post-Test/Formative
-6. L!L: Assign Practice Activities
-7. State Testing Prep
-
-**Components Replaced:**
-- ❌ L!L M.O.Y. Assessment → ✅ MOY Benchmark (comprehensive)
-- ❌ L!L E.O.Y. Assessment → ✅ EOY Benchmark (comprehensive)
-- ❌ L!L Writing Project / Word Training → ✅ L!L Writing Project (separate)
-
-**Bug Fixes:**
-- Fixed reorder functionality for newly added components
-- Components now properly assigned sequential `display_order` values
-- Up/down arrows work correctly in all cells
-
-**Alignment Score**: 85% alignment with L!L Program Guide
+**UI/UX Polish:**
+- Consistent purple (#9333EA) and teal (#14B8A6) color scheme
+- Standardized button sizes (text-sm, py-2, px-4)
+- Cleaned up admin tables (hidden unnecessary columns)
+- Made District Name optional in Create Guide wizard
+- Removed redundant "Back to Dashboard" links
 
 ---
 
 ## Documentation
 
-- **[Component Creation Guide](./components/COMPONENT_CREATION_GUIDE.md)** - How to create new components
-- **[Multi-Select Implementation](./MULTI_SELECT_IMPLEMENTATION_PLAN.md)** - Phase 1 & 2 complete
-- **[Multi-Drag Implementation Plan](./MULTI_DRAG_IMPLEMENTATION_PLAN.md)** - Upcoming feature (Phase 3)
-- **API Documentation** - Available in `/app/api/` route files
-- **Database Schema** - See `/scripts/schema-*.sql` files
+### Current Documentation
+- **[V2 Completion Plan](../V2_COMPLETION_PLAN.md)** - Current implementation status
+- **[Future Re-pacing Enhancements](../FUTURE_REPACING_ENHANCEMENTS.md)** - Planned improvements
+- **[V2 Schema README](./scripts/V2_SCHEMA_README.md)** - Database schema details
+
+### Archived Documentation
+- **[V2 Rebuild Plan](./archived_docs/V2_REBUILD_PROJECT_PLAN.md)** - Original V2 design
+- **[V2 Refinements Plan](./archived_docs/V2_REFINEMENTS_PLAN.md)** - Feature refinements
+- **[V2 Component Types](./archived_docs/V2_COMPONENT_TYPES.md)** - Expansion type documentation
+- **[Multi-Select Implementation](./archived_docs/MULTI_SELECT_IMPLEMENTATION_PLAN.md)** - Phase 1 & 2 complete
+- **[Multi-Drag Implementation Plan](./archived_docs/MULTI_DRAG_IMPLEMENTATION_PLAN.md)** - Completed feature
+
+---
+
+## API Routes
+
+### V2 API Structure
+
+```
+/api/v2/
+├── component-templates/          # Component template CRUD
+│   ├── GET    - List templates (filter by subject)
+│   ├── POST   - Create custom template
+│   ├── [id]/
+│   │   ├── PATCH  - Update template
+│   │   └── DELETE - Delete template
+├── scheduled-items/              # Scheduled item CRUD
+│   ├── GET    - List items (filter by guide_id, calendar_type)
+│   ├── POST   - Create items (drag from library, expands template)
+│   ├── count/ - GET count by component_key
+│   ├── [id]/
+│   │   ├── PATCH  - Update single item
+│   │   └── DELETE - Delete single item
+│   ├── bulk-update-color/
+│   │   └── PATCH  - Update color for multiple items
+│   └── bulk-move/
+│       └── PATCH  - Move multiple items to new date
+└── admin/
+    └── component-templates/      # Admin template management
+        ├── GET    - List all templates
+        ├── POST   - Create system template
+        ├── [id]/
+        │   ├── PATCH  - Update template
+        │   └── DELETE - Delete template
+
+/api/pacing-guides/
+├── GET    - List user's guides
+├── POST   - Create new guide
+├── [id]/
+│   ├── GET    - Get guide details with scheduled_items
+│   ├── DELETE - Delete guide
+│   ├── bulk-adjust/
+│   │   └── POST   - Re-pace calendar (shift dates)
+│   ├── import-calendar/
+│   │   └── POST   - AI calendar extraction from PDF
+│   ├── add-extracted-events/
+│   │   └── POST   - Add PDF-extracted events
+│   └── export/
+│       └── pdf/
+│           └── GET - Export calendar as PDF
+```
 
 ---
 
 ## Color Coding System
 
-Components use a coordinated color scheme for easy identification:
+Components use a coordinated color scheme for easy visual identification:
 
 | Category | Colors | Hex Codes |
 |----------|--------|-----------|
@@ -338,9 +458,9 @@ To add new features or fix bugs:
 ## Support
 
 For questions or issues:
-- Check the Component Creation Guide
-- Review database schema files
-- Check API route documentation in `/app/api/`
+- Check the V2 Completion Plan for current status
+- Review database schema in `scripts/schema-v2.sql`
+- Check API route documentation in `/app/api/v2/`
 
 ---
 
@@ -354,21 +474,42 @@ Proprietary - All rights reserved
 
 ```
 nola-ess-app/
-├── app/                      # Next.js app directory
-│   ├── api/                 # API routes
-│   ├── dashboard/           # Dashboard pages
-│   └── auth/                # Authentication pages
-├── components/              # React components
-│   ├── ComponentLibrary.tsx
-│   ├── EditComponentModal.tsx
-│   └── COMPONENT_CREATION_GUIDE.md
-├── lib/                     # Utility functions
-│   ├── db.ts               # Database connection
-│   └── auth.ts             # Authentication config
-├── scripts/                 # Database scripts
-│   ├── seed-components.js  # Component seeder
-│   └── schema-*.sql        # Database schemas
-└── public/                  # Static assets
+├── app/                          # Next.js app directory
+│   ├── api/                      # API routes
+│   │   ├── v2/                   # V2 API endpoints
+│   │   │   ├── component-templates/
+│   │   │   ├── scheduled-items/
+│   │   │   └── admin/
+│   │   └── pacing-guides/        # Guide management
+│   ├── dashboard/                # Dashboard pages
+│   │   ├── guides/
+│   │   │   ├── [id]/            # Calendar view page
+│   │   │   └── new/             # Create guide wizard
+│   │   ├── documents/           # Documents page
+│   │   └── admin/               # Admin pages
+│   └── auth/                     # Authentication pages
+├── components/                   # React components
+│   ├── v2/                       # V2 components
+│   │   ├── calendar/
+│   │   ├── library/
+│   │   └── modals/
+│   ├── ComponentLibrary.tsx      # Main library component
+│   └── Header.tsx                # App header
+├── lib/                          # Utility functions
+│   ├── v2/                       # V2 utilities
+│   │   ├── template-expansion.ts
+│   │   └── date-utils.ts
+│   ├── db.ts                     # Database connection
+│   └── auth.ts                   # Authentication config
+├── scripts/                      # Database scripts
+│   ├── schema-v2.sql             # V2 database schema
+│   ├── migrate-templates-to-v2.js
+│   ├── create-admin.js
+│   └── cleanup-v1-tables.sql     # V1 cleanup (run on production)
+├── types/                        # TypeScript types
+│   └── v2.ts                     # V2 type definitions
+├── archived_v1_code/             # Archived V1 code (not deployed)
+└── archived_docs/                # Archived documentation (not deployed)
 ```
 
 ---

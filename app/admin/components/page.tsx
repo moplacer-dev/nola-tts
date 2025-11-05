@@ -48,7 +48,7 @@ export default function AdminComponentsPage() {
   const fetchTemplates = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/admin/component-templates');
+      const response = await fetch('/api/v2/admin/component-templates');
       if (response.ok) {
         const data = await response.json();
         setTemplates(data.templates);
@@ -64,7 +64,7 @@ export default function AdminComponentsPage() {
 
   const handleToggleActive = async (templateId: string, currentStatus: boolean) => {
     try {
-      const response = await fetch(`/api/admin/component-templates/${templateId}`, {
+      const response = await fetch(`/api/v2/admin/component-templates/${templateId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ is_active: !currentStatus }),
@@ -266,11 +266,6 @@ export default function AdminComponentsPage() {
                           <div className="text-sm font-medium text-gray-900">
                             {template.display_name}
                           </div>
-                          {template.description && (
-                            <div className="text-xs text-gray-500 mt-1">
-                              {template.description}
-                            </div>
-                          )}
                         </div>
                       </div>
                     </td>

@@ -58,7 +58,7 @@ export default function CustomComponentModal({
 
   const fetchInstanceCount = async (componentKey: string) => {
     try {
-      const response = await fetch(`/api/scheduled-components/count?component_key=${componentKey}`);
+      const response = await fetch(`/api/v2/scheduled-items/count?component_key=${componentKey}`);
       if (response.ok) {
         const data = await response.json();
         setInstanceCount(data.count || 0);
@@ -96,8 +96,8 @@ export default function CustomComponentModal({
       }
 
       const url = isEditMode
-        ? `/api/component-templates/${template.id}`
-        : '/api/component-templates';
+        ? `/api/v2/component-templates/${template.id}`
+        : '/api/v2/component-templates';
 
       const method = isEditMode ? 'PATCH' : 'POST';
 

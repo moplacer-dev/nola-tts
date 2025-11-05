@@ -158,7 +158,7 @@ export default function ComponentLibrary({ subject, guideId, onDragStart, onDrag
   const fetchComponents = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/component-templates?subject=${subject}`);
+      const response = await fetch(`/api/v2/component-templates?subject=${subject}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch components');
@@ -185,7 +185,7 @@ export default function ComponentLibrary({ subject, guideId, onDragStart, onDrag
 
   const handleDeleteCustom = async (template: ComponentTemplate) => {
     // Fetch instance count
-    const countResponse = await fetch(`/api/scheduled-components/count?component_key=${template.component_key}`);
+    const countResponse = await fetch(`/api/v2/scheduled-items/count?component_key=${template.component_key}`);
     const countData = await countResponse.json();
     const count = countData.count || 0;
 
@@ -196,7 +196,7 @@ export default function ComponentLibrary({ subject, guideId, onDragStart, onDrag
     if (!confirm(message)) return;
 
     try {
-      const response = await fetch(`/api/component-templates/${template.id}`, {
+      const response = await fetch(`/api/v2/component-templates/${template.id}`, {
         method: 'DELETE',
       });
 
@@ -227,11 +227,17 @@ export default function ComponentLibrary({ subject, guideId, onDragStart, onDrag
       throw new Error('Guide ID is required');
     }
 
-    const response = await fetch('/api/calendar-events', {
+    const response = await fetch('/api/v2/scheduled-items', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        pacing_guide_id: guideId,
+        guide_id: guideId,
+        calendar_type: 'base',
+        start_date: eventData.start_date,
+        duration_days: eventData.duration_days,
+        title_override: eventData.event_name,
+        blocks_curriculum: true,
+        source: 'manual',
         ...eventData,
       }),
     });

@@ -114,11 +114,11 @@ export async function POST(
       throw error;
     }
 
-    // Fetch existing Base Calendar templates for matching
+    // Fetch existing Base Calendar templates for matching (V2)
     const templatesResult = await pool.query(
       `SELECT component_key, display_name, color
-       FROM component_templates
-       WHERE subject = 'base' AND is_active = true`
+       FROM component_templates_v2
+       WHERE subject = 'base'`
     );
 
     const templates = templatesResult.rows;
