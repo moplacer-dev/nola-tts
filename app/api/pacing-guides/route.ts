@@ -74,10 +74,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { school_name, district_name, grade_level, first_day, last_day, events = [] } = body;
 
-    // Validation
-    if (!school_name || !district_name || !grade_level || !first_day || !last_day) {
+    // Validation (district_name is optional)
+    if (!school_name || !grade_level || !first_day || !last_day) {
       return NextResponse.json(
-        { error: 'All fields are required' },
+        { error: 'School name, grade level, and school dates are required' },
         { status: 400 }
       );
     }
@@ -92,12 +92,12 @@ export async function POST(req: NextRequest) {
     // Start transaction
     await client.query('BEGIN');
 
-    // 1. Create pacing guide
+    // 1. Create pacing guide (district_name defaults to empty string if not provided)
     const guideResult = await client.query(
       `INSERT INTO pacing_guides (user_id, school_name, district_name, grade_level, first_day, last_day)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING id, school_name, district_name, grade_level, first_day, last_day, created_at, updated_at`,
-      [session.user.id, school_name, district_name, grade_level, first_day, last_day]
+      [session.user.id, school_name, district_name || '', grade_level, first_day, last_day]
     );
 
     const guide = guideResult.rows[0];
