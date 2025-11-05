@@ -115,6 +115,17 @@ export async function PATCH(
         );
       }
 
+      // If title_override is also being updated, update it for the single item
+      // (not the whole group, since each item can have a different title)
+      if (body.title_override !== undefined) {
+        await pool.query(
+          `UPDATE scheduled_items_v2
+           SET title_override = $1
+           WHERE id = $2`,
+          [body.title_override, id]
+        );
+      }
+
       // Return the updated original item
       const updatedItem = await pool.query(
         'SELECT * FROM scheduled_items_v2 WHERE id = $1',
