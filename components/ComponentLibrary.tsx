@@ -238,7 +238,6 @@ export default function ComponentLibrary({ subject, guideId, onDragStart, onDrag
         title_override: eventData.event_name,
         blocks_curriculum: true,
         source: 'manual',
-        ...eventData,
       }),
     });
 
