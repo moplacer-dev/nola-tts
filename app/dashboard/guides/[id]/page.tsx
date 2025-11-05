@@ -333,7 +333,7 @@ export default function CalendarViewV2() {
       const metadata: ScheduledItemMetadata = {};
 
       // For now, default rotation_number to 1 if needed
-      if (template?.metadata_fields?.includes('rotation_number')) {
+      if (Array.isArray(template?.metadata_fields) && template.metadata_fields.includes('rotation_number')) {
         metadata.rotation_number = 1;
       }
 

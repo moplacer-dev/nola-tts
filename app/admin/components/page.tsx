@@ -16,6 +16,7 @@ interface ComponentTemplate {
   default_duration_days: number;
   color: string;
   description: string | null;
+  category: string | null;
   is_active: boolean;
   user_id: string | null;
   metadata: any;

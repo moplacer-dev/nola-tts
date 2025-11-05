@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface ComponentTemplate {
   id: string;
@@ -10,6 +10,7 @@ interface ComponentTemplate {
   default_duration_days: number;
   color: string;
   description: string | null;
+  category: string | null;
   is_active: boolean;
   user_id: string | null;
 }
@@ -26,9 +27,37 @@ export default function EditComponentModal({ component, onClose, onSuccess }: Ed
     default_duration_days: component.default_duration_days,
     color: component.color,
     description: component.description || '',
+    category: component.category || '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [existingCategories, setExistingCategories] = useState<string[]>([]);
+  const [showCustomCategory, setShowCustomCategory] = useState(false);
+
+  // Fetch existing categories when modal opens
+  useEffect(() => {
+    fetchExistingCategories();
+  }, []);
+
+  const fetchExistingCategories = async () => {
+    try {
+      const response = await fetch('/api/v2/admin/component-templates');
+      if (response.ok) {
+        const data = await response.json();
+        // Extract unique, non-null categories
+        const categories = Array.from(
+          new Set(
+            data.templates
+              .map((t: any) => t.category)
+              .filter((c: any) => c != null && c.trim() !== '')
+          )
+        ).sort() as string[];
+        setExistingCategories(categories);
+      }
+    } catch (err) {
+      console.error('Failed to fetch categories:', err);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,6 +185,72 @@ export default function EditComponentModal({ component, onClose, onSuccess }: Ed
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#9333EA] text-gray-900"
                 rows={3}
               />
+            </div>
+
+            {/* Category (Optional) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Category (Optional)
+              </label>
+
+              {/* Existing categories as buttons */}
+              {existingCategories.length > 0 && !showCustomCategory && (
+                <div className="space-y-2">
+                  <div className="flex flex-wrap gap-2">
+                    {existingCategories.map((cat) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, category: cat })}
+                        className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                          formData.category === cat
+                            ? 'bg-[#9333EA] text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCustomCategory(true);
+                    }}
+                    className="text-sm text-[#9333EA] hover:text-[#7928CA] font-medium"
+                  >
+                    + Add new category
+                  </button>
+                </div>
+              )}
+
+              {/* Custom category input */}
+              {(showCustomCategory || existingCategories.length === 0) && (
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#9333EA] text-gray-900"
+                    placeholder="Enter category name"
+                  />
+                  {existingCategories.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowCustomCategory(false);
+                      }}
+                      className="text-sm text-gray-600 hover:text-gray-800"
+                    >
+                      ← Back to existing categories
+                    </button>
+                  )}
+                </div>
+              )}
+
+              <p className="mt-1 text-xs text-gray-500">
+                Used for grouping in the component library
+              </p>
             </div>
           </div>
 
