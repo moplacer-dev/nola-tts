@@ -145,7 +145,11 @@ IMPORTANT: Extract events that teachers need to consider when planning pacing gu
 For each event found, extract:
 - Event name (exactly as it appears, but simplified if verbose)
 - Start date (YYYY-MM-DD format)
-- Duration in days (count carefully for multi-day events)
+- Duration in SCHOOL days ONLY (Monday-Friday, excluding weekends and other holidays)
+  * For single-day events: duration_days = 1
+  * For multi-day events: COUNT ONLY WEEKDAYS (Mon-Fri) between start and end date
+  * Example: An event from Tuesday to next Monday = 5 school days (Tue, Wed, Thu, Fri, Mon)
+  * Example: Winter Break Dec 23-Jan 3 = count only weekdays in that range
 - Event type classification
 - All extracted events should have blocks_curriculum: true
 - Confidence level (high for clear dates, medium for inferred dates)
@@ -160,7 +164,7 @@ Return ONLY valid JSON in this exact format:
       "start_date": "2024-09-02",
       "duration_days": 1,
       "event_type": "holiday",
-      "suggested_color": "#232323",
+      "suggested_color": "#E5E7EB",
       "blocks_curriculum": true,
       "confidence": "high"
     },
@@ -169,7 +173,7 @@ Return ONLY valid JSON in this exact format:
       "start_date": "2024-12-23",
       "duration_days": 10,
       "event_type": "break",
-      "suggested_color": "#232323",
+      "suggested_color": "#E5E7EB",
       "blocks_curriculum": true,
       "confidence": "high"
     },
@@ -178,7 +182,7 @@ Return ONLY valid JSON in this exact format:
       "start_date": "2025-04-15",
       "duration_days": 5,
       "event_type": "testing",
-      "suggested_color": "#232323",
+      "suggested_color": "#E5E7EB",
       "blocks_curriculum": true,
       "confidence": "high"
     }

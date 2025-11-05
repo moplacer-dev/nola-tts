@@ -6,14 +6,14 @@ const pool = new Pool({
 
 const componentTemplates = [
   // BASE CALENDAR COMPONENTS (39)
-  // All base calendar events use #6B7280 (lighter gray) for consistency
+  // All base calendar events use #E5E7EB (lighter gray) for consistency
   // Breaks
   {
     component_key: 'base_winter_break',
     subject: 'base',
     display_name: 'Winter Break',
     default_duration_days: 5,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'Winter holiday break',
   },
   {
@@ -21,7 +21,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'Spring Break',
     default_duration_days: 5,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'Spring break',
   },
   {
@@ -29,7 +29,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'Thanksgiving Break',
     default_duration_days: 3,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'Thanksgiving break',
   },
 
@@ -39,7 +39,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'Labor Day',
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'Labor Day - federal holiday',
   },
   {
@@ -47,7 +47,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'Columbus Day',
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'Columbus Day - federal holiday',
   },
   {
@@ -55,7 +55,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'Election Day',
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'Election Day',
   },
   {
@@ -63,7 +63,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: "Veterans Day",
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: "Veterans Day - federal holiday",
   },
   {
@@ -71,7 +71,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'Martin Luther King Jr. Day',
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'MLK Day - federal holiday',
   },
   {
@@ -79,7 +79,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: "Presidents' Day",
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: "Presidents' Day - federal holiday",
   },
   {
@@ -87,7 +87,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'Memorial Day',
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'Memorial Day - federal holiday',
   },
   {
@@ -95,7 +95,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'Juneteenth',
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'Juneteenth - federal holiday',
   },
 
@@ -105,7 +105,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'Three Kings Day',
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'Three Kings Day / Epiphany',
   },
   {
@@ -113,7 +113,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: "Valentine's Day",
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: "Valentine's Day celebration",
   },
   {
@@ -121,7 +121,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: "St. Patrick's Day",
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: "St. Patrick's Day",
   },
   {
@@ -129,7 +129,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'Cinco de Mayo',
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'Cinco de Mayo celebration',
   },
   {
@@ -137,7 +137,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: "Mother's Day",
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: "Mother's Day",
   },
   {
@@ -145,7 +145,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: "Father's Day",
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: "Father's Day",
   },
   {
@@ -153,7 +153,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'Mardi Gras',
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'Mardi Gras celebration',
   },
   {
@@ -161,7 +161,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'Halloween',
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'Halloween celebration',
   },
   {
@@ -169,7 +169,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'Earth Day',
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'Earth Day (April 22)',
   },
 
@@ -179,7 +179,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'Black History Month',
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'Black History Month (February)',
   },
   {
@@ -187,7 +187,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: "Women's History Month",
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: "Women's History Month (March)",
   },
   {
@@ -195,7 +195,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'Hispanic Heritage Month',
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'Hispanic Heritage Month (Sept 15 - Oct 15)',
   },
 
@@ -205,7 +205,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'Professional Development',
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'Staff professional development day',
   },
   {
@@ -213,7 +213,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'Testing Window',
     default_duration_days: 3,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'District or state testing period',
   },
   {
@@ -221,7 +221,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'Early Dismissal',
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'Half day / early dismissal',
   },
   {
@@ -229,7 +229,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'Parent-Teacher Conferences',
     default_duration_days: 2,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'Parent-teacher conference days',
   },
   {
@@ -237,7 +237,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'School Assembly',
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'School-wide assembly or event',
   },
   {
@@ -245,7 +245,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'Field Trip',
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'School field trip',
   },
   {
@@ -253,7 +253,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'Teacher Planning Day',
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'Teacher planning/workday',
   },
   {
@@ -261,7 +261,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'Report Cards',
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'Report card distribution',
   },
 
@@ -271,7 +271,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'No School',
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'No school day',
   },
   {
@@ -279,7 +279,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'Half Day',
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'Half day of instruction',
   },
   {
@@ -287,7 +287,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'Star Orientation',
     default_duration_days: 2,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'Star orientation program',
   },
   {
@@ -295,7 +295,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'First Day for Students',
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'First day of school for students',
   },
   {
@@ -303,7 +303,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'First Day for Staff',
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'First day for staff',
   },
   {
@@ -311,7 +311,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'Teacher In-Service Day',
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'Teacher in-service day',
   },
   {
@@ -319,7 +319,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'Last Day for Students',
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'Last day of school for students',
   },
   {
@@ -327,7 +327,7 @@ const componentTemplates = [
     subject: 'base',
     display_name: 'Last Day for Staff',
     default_duration_days: 1,
-    color: '#6B7280',
+    color: '#E5E7EB',
     description: 'Last day for staff',
   },
 

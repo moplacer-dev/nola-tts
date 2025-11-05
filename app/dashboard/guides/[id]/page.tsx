@@ -220,7 +220,10 @@ export default function CalendarViewV2() {
     baseCalendarItems
       .filter(item => item.blocks_curriculum)
       .forEach(item => {
-        let currentDate = new Date(item.start_date);
+        // Parse date carefully to avoid timezone issues
+        // IMPORTANT: Use local date parsing (year, month-1, day) not new Date(string)
+        const [year, month, day] = item.start_date.split('-').map(Number);
+        let currentDate = new Date(year, month - 1, day);
 
         // Add all dates in the event's duration
         for (let i = 0; i < item.duration_days; i++) {
