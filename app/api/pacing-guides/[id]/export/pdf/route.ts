@@ -157,6 +157,7 @@ function generateCalendarHTML(
   subject: string,
   baseItems: any[], // Items from base calendar (holidays, etc.)
   subjectItems: any[], // Items from subject calendar (curriculum components)
+  currentVersion: number | null, // Current version number (or null if no versions)
   startFromDate?: string | null // Optional: Only include weeks from this date onwards
 ) {
   const subjectLabels: Record<string, string> = {
@@ -353,7 +354,7 @@ function generateCalendarHTML(
     <div class="header">
       <div class="school-name">${guide.school_name} ${subjectLabels[subject]} Pacing Guide</div>
       <div class="school-info">
-        ${guide.district_name} • Grade ${guide.grade_level} •
+        ${currentVersion !== null ? `Version ${currentVersion} • ` : ''}${guide.district_name} • Grade ${guide.grade_level} •
         ${formatDate(firstDay)} - ${formatDate(lastDay)}
       </div>
     </div>
@@ -489,6 +490,17 @@ export async function POST(
     );
     const allItems = itemsResult.rows;
 
+    // Fetch current version number
+    const versionResult = await pool.query(
+      `SELECT version_number
+       FROM pacing_guide_versions
+       WHERE guide_id = $1
+       ORDER BY version_number DESC
+       LIMIT 1`,
+      [id]
+    );
+    const currentVersion = versionResult.rows.length > 0 ? versionResult.rows[0].version_number : null;
+
     // Determine which subjects to export (exclude base from "all")
     const subjects = subject === 'all'
       ? ['ela', 'math', 'science', 'social_studies']
@@ -503,7 +515,7 @@ export async function POST(
       const subjectItems = allItems.filter(item => item.calendar_type === subj);
 
       // For subject calendars, pass both base items (events) and subject items (components)
-      const html = generateCalendarHTML(guide, subj, baseItems, subjectItems, startFromDate);
+      const html = generateCalendarHTML(guide, subj, baseItems, subjectItems, currentVersion, startFromDate);
       htmlPages.push(html);
     }
 
