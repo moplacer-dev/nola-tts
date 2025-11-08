@@ -899,7 +899,7 @@ export default function CalendarViewV2() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowVersionModal(true)}
-              className="border-2 border-purple-300 hover:border-purple-400 text-purple-700 hover:text-purple-900 text-sm font-medium py-2 px-4 rounded-md transition-colors bg-transparent"
+              className="border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 text-sm font-medium py-2 px-4 rounded-md transition-colors bg-transparent"
             >
               View Versions
             </button>
