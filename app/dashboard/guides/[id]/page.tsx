@@ -126,6 +126,13 @@ export default function CalendarViewV2() {
   const [currentVersion, setCurrentVersion] = useState<number | null>(null);
   const [showVersionModal, setShowVersionModal] = useState(false);
 
+  // Hide completed weeks state
+  const [hideWeeksBefore, setHideWeeksBefore] = useState<Date | null>(null);
+
+  // PDF export modal state
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportStartDate, setExportStartDate] = useState<Date | null>(null);
+
   // Fetch guide data
   useEffect(() => {
     fetchGuide();
@@ -655,13 +662,16 @@ export default function CalendarViewV2() {
    */
   const handleExportPDF = async () => {
     try {
-      const res = await fetch(
-        `/api/pacing-guides/${guideId}/export/pdf?subject=${selectedSubject}`,
-        {
-          method: 'POST',
-          credentials: 'include'
-        }
-      );
+      // Build URL with optional start_from_date parameter
+      let url = `/api/pacing-guides/${guideId}/export/pdf?subject=${selectedSubject}`;
+      if (exportStartDate) {
+        url += `&start_from_date=${formatDateForDB(exportStartDate)}`;
+      }
+
+      const res = await fetch(url, {
+        method: 'POST',
+        credentials: 'include'
+      });
 
       if (!res.ok) {
         throw new Error('Failed to generate PDF');
@@ -669,14 +679,18 @@ export default function CalendarViewV2() {
 
       // Download the PDF
       const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
+      const downloadUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
+      a.href = downloadUrl;
       a.download = `${guide?.school_name || 'pacing-guide'}-${selectedSubject}.pdf`;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
+      window.URL.revokeObjectURL(downloadUrl);
       document.body.removeChild(a);
+
+      // Close modal and reset
+      setShowExportModal(false);
+      setExportStartDate(null);
     } catch (err) {
       console.error('Error exporting PDF:', err);
       alert(err instanceof Error ? err.message : 'Failed to export PDF');
@@ -910,7 +924,7 @@ export default function CalendarViewV2() {
               Re-Pace Calendar
             </button>
             <button
-              onClick={handleExportPDF}
+              onClick={() => setShowExportModal(true)}
               className="bg-[#0D9488] hover:bg-[#0F766E] text-white text-sm font-medium py-2 px-4 rounded-md transition-colors"
             >
               Export PDF
@@ -919,12 +933,42 @@ export default function CalendarViewV2() {
         </div>
       </div>
 
-      {/* Subject tabs */}
+      {/* Subject tabs with hide weeks control */}
       <div className="bg-white border-b border-gray-200 px-6 shadow-sm">
-        <SubjectTabs
-          activeSubject={selectedSubject}
-          onSubjectChange={handleSubjectChange}
-        />
+        <div className="flex items-center justify-between">
+          <SubjectTabs
+            activeSubject={selectedSubject}
+            onSubjectChange={handleSubjectChange}
+          />
+
+          {/* Hide weeks control */}
+          <div className="flex items-center gap-3">
+            <label className="text-sm font-medium text-gray-700">
+              Hide weeks before:
+            </label>
+            <input
+              type="date"
+              value={hideWeeksBefore ? formatDateForDB(hideWeeksBefore) : ''}
+              onChange={(e) => {
+                if (e.target.value) {
+                  const [year, month, day] = e.target.value.split('-').map(Number);
+                  setHideWeeksBefore(new Date(year, month - 1, day));
+                } else {
+                  setHideWeeksBefore(null);
+                }
+              }}
+              className="px-3 py-1.5 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+            />
+            {hideWeeksBefore && (
+              <button
+                onClick={() => setHideWeeksBefore(null)}
+                className="text-sm text-gray-600 hover:text-gray-900 underline"
+              >
+                Show all weeks
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Main content area */}
@@ -938,6 +982,7 @@ export default function CalendarViewV2() {
             blockedDates={blockedDates}
             selectedItems={selectedItems}
             viewingCalendar={selectedSubject}
+            hideWeeksBefore={hideWeeksBefore}
             onSelectItem={handleSelectItem}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
@@ -1006,6 +1051,83 @@ export default function CalendarViewV2() {
           fetchCurrentVersion();
         }}
       />
+
+      {/* Export PDF Modal */}
+      {showExportModal && (
+        <>
+          <div className="fixed inset-0 z-50" onClick={() => setShowExportModal(false)} />
+          <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+            <div
+              className="bg-white rounded-lg shadow-2xl border border-gray-200 max-w-md w-full mx-4 pointer-events-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-900">Export PDF</h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  Export calendar for {selectedSubject.toUpperCase()}
+                </p>
+              </div>
+
+              <div className="px-6 py-4">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={exportStartDate !== null}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setExportStartDate(hideWeeksBefore || new Date());
+                      } else {
+                        setExportStartDate(null);
+                      }
+                    }}
+                    className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    Start from specific date
+                  </span>
+                </label>
+
+                {exportStartDate && (
+                  <div className="mt-3 ml-7">
+                    <input
+                      type="date"
+                      value={formatDateForDB(exportStartDate)}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          const [year, month, day] = e.target.value.split('-').map(Number);
+                          setExportStartDate(new Date(year, month - 1, day));
+                        }
+                      }}
+                      className="px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Only weeks ending on or after this date will be included
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowExportModal(false);
+                    setExportStartDate(null);
+                  }}
+                  className="px-4 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleExportPDF}
+                  className="px-4 py-2 text-sm font-medium bg-[#0D9488] hover:bg-[#0F766E] text-white rounded transition-colors"
+                >
+                  Export PDF
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

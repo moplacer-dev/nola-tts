@@ -119,7 +119,8 @@ function generateCalendarHTML(
   guide: any,
   subject: string,
   baseItems: any[], // Items from base calendar (holidays, etc.)
-  subjectItems: any[] // Items from subject calendar (curriculum components)
+  subjectItems: any[], // Items from subject calendar (curriculum components)
+  startFromDate?: string | null // Optional: Only include weeks from this date onwards
 ) {
   const subjectLabels: Record<string, string> = {
     base: 'Base Calendar',
@@ -129,7 +130,18 @@ function generateCalendarHTML(
     social_studies: 'Social Studies',
   };
 
-  const weeks = calculateWeeks(guide.first_day, guide.last_day);
+  const allWeeks = calculateWeeks(guide.first_day, guide.last_day);
+
+  // Filter weeks if startFromDate is provided
+  const weeks = startFromDate
+    ? allWeeks.filter(week => {
+        // Keep weeks where the week END date (Friday) is on or after startFromDate
+        const weekEndDate = new Date(week.startDate);
+        weekEndDate.setDate(weekEndDate.getDate() + 4); // Friday is 4 days after Monday
+        const cutoffDate = new Date(startFromDate);
+        return weekEndDate >= cutoffDate;
+      })
+    : allWeeks;
 
   // Helper to get base items (events) for a date
   const getBaseItemsForDate = (date: Date) => {
@@ -395,6 +407,7 @@ export async function POST(
     const { id } = await params;
     const { searchParams } = new URL(request.url);
     const subject = searchParams.get('subject');
+    const startFromDate = searchParams.get('start_from_date'); // Optional: filter weeks from this date
 
     if (!subject) {
       return NextResponse.json({ error: 'Subject parameter required' }, { status: 400 });
@@ -449,7 +462,7 @@ export async function POST(
       const subjectItems = allItems.filter(item => item.calendar_type === subj);
 
       // For subject calendars, pass both base items (events) and subject items (components)
-      const html = generateCalendarHTML(guide, subj, baseItems, subjectItems);
+      const html = generateCalendarHTML(guide, subj, baseItems, subjectItems, startFromDate);
       htmlPages.push(html);
     }
 

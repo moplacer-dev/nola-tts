@@ -21,6 +21,7 @@ interface CalendarGridProps {
   blockedDates: Set<string>; // Set of YYYY-MM-DD strings
   selectedItems: Set<string>;
   viewingCalendar: CalendarType; // Current calendar being viewed
+  hideWeeksBefore?: Date | null; // Hide weeks before this date
   onSelectItem: (itemId: string, ctrlKey: boolean) => void;
   onDrop: (dateString: string, e: React.DragEvent) => void;
   onDragOver: (dateString: string, e: React.DragEvent) => void;
@@ -91,6 +92,7 @@ export function CalendarGrid({
   blockedDates,
   selectedItems,
   viewingCalendar,
+  hideWeeksBefore,
   onSelectItem,
   onDrop,
   onDragOver,
@@ -102,6 +104,20 @@ export function CalendarGrid({
     console.log('CalendarGrid: Generated weeks:', generated.length, 'from', firstDay, 'to', lastDay);
     return generated;
   }, [firstDay, lastDay]);
+
+  // Filter weeks based on hideWeeksBefore
+  const visibleWeeks = useMemo(() => {
+    if (!hideWeeksBefore) return weeks;
+
+    return weeks.filter(week => {
+      // Keep weeks where the week END date (Friday) is after or on hideWeeksBefore
+      const weekEndDate = new Date(week.startDate);
+      weekEndDate.setDate(weekEndDate.getDate() + 4); // Friday is 4 days after Monday
+      return weekEndDate >= hideWeeksBefore;
+    });
+  }, [weeks, hideWeeksBefore]);
+
+  const hiddenWeeksCount = weeks.length - visibleWeeks.length;
 
   // Organize items by date for quick lookup
   const itemsByDate = useMemo(() => {
@@ -165,6 +181,14 @@ export function CalendarGrid({
 
   return (
     <div className="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm">
+      {/* Hidden weeks banner */}
+      {hiddenWeeksCount > 0 && (
+        <div className="bg-gray-50 border-b border-gray-200 px-4 py-2 text-sm text-gray-700">
+          <span className="font-medium">{hiddenWeeksCount} week{hiddenWeeksCount !== 1 ? 's' : ''} hidden</span>
+          <span className="text-gray-600 ml-2">• Showing Week {visibleWeeks[0]?.weekNumber} onwards</span>
+        </div>
+      )}
+
       {/* Day headers - Monday through Friday only */}
       <div className="grid bg-gray-50 border-b border-gray-300 sticky top-0 z-10" style={{ gridTemplateColumns: '80px 1fr 1fr 1fr 1fr 1fr' }}>
         <div className="p-2 border-r border-gray-300">
@@ -179,7 +203,7 @@ export function CalendarGrid({
 
       {/* Week rows */}
       <div>
-        {weeks.map((week) => (
+        {visibleWeeks.map((week) => (
           <CalendarWeek
             key={week.weekNumber}
             weekNumber={week.weekNumber}
