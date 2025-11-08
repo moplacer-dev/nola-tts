@@ -43,10 +43,22 @@ export async function GET(req: NextRequest) {
     }
 
     const result = await pool.query(
-      `SELECT id, school_name, district_name, grade_level, first_day, last_day, created_at, updated_at
-       FROM pacing_guides
-       WHERE user_id = $1
-       ORDER BY created_at DESC`,
+      `SELECT
+        pg.id,
+        pg.school_name,
+        pg.district_name,
+        pg.grade_level,
+        pg.first_day,
+        pg.last_day,
+        pg.created_at,
+        pg.updated_at,
+        MAX(v.version_number) as current_version,
+        MAX(v.created_at) as last_repaced_at
+       FROM pacing_guides pg
+       LEFT JOIN pacing_guide_versions v ON pg.id = v.guide_id
+       WHERE pg.user_id = $1
+       GROUP BY pg.id, pg.school_name, pg.district_name, pg.grade_level, pg.first_day, pg.last_day, pg.created_at, pg.updated_at
+       ORDER BY pg.created_at DESC`,
       [session.user.id]
     );
 

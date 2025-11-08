@@ -9,10 +9,12 @@ interface PacingGuide {
   id: string;
   school_name: string;
   district_name: string;
-  grade_level: '7' | '8';
+  grade_level: '7' | '8' | '9';
   first_day: string;
   last_day: string;
   created_at: string;
+  current_version: number | null;
+  last_repaced_at: string | null;
 }
 
 interface HLP {
@@ -302,6 +304,12 @@ export default function DocumentsPage() {
                         School Year
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Version
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Last Re-paced
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Created
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -324,6 +332,22 @@ export default function DocumentsPage() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                           {new Date(guide.first_day).toLocaleDateString()} -{' '}
                           {new Date(guide.last_day).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {guide.current_version !== null ? (
+                            <span className="text-purple-600 font-medium">
+                              Version {guide.current_version}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">—</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {guide.last_repaced_at ? (
+                            new Date(guide.last_repaced_at).toLocaleDateString()
+                          ) : (
+                            <span className="text-gray-400">—</span>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                           {new Date(guide.created_at).toLocaleDateString()}
