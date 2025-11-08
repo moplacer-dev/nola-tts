@@ -114,7 +114,7 @@ export function VersionHistoryModal({
   return (
     <>
       {/* Invisible backdrop for click-to-close */}
-      <div className="fixed inset-0 z-50 bg-black bg-opacity-25" onClick={onClose} />
+      <div className="fixed inset-0 z-50" onClick={onClose} />
 
       {/* Modal window */}
       <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
