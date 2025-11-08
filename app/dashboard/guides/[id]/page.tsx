@@ -662,6 +662,7 @@ export default function CalendarViewV2() {
    * Handle PDF export
    */
   const handleExportPDF = async () => {
+    console.log('🔵 Starting PDF export, setting isExportingPDF to true');
     setIsExportingPDF(true);
 
     try {
@@ -671,6 +672,7 @@ export default function CalendarViewV2() {
         url += `&start_from_date=${formatDateForDB(exportStartDate)}`;
       }
 
+      console.log('🔵 Fetching PDF from:', url);
       const res = await fetch(url, {
         method: 'POST',
         credentials: 'include'
@@ -680,6 +682,7 @@ export default function CalendarViewV2() {
         throw new Error('Failed to generate PDF');
       }
 
+      console.log('🔵 PDF received, creating download');
       // Download the PDF
       const blob = await res.blob();
       const downloadUrl = window.URL.createObjectURL(blob);
@@ -691,6 +694,7 @@ export default function CalendarViewV2() {
       window.URL.revokeObjectURL(downloadUrl);
       document.body.removeChild(a);
 
+      console.log('🔵 PDF downloaded successfully');
       // Close modal and reset
       setShowExportModal(false);
       setExportStartDate(null);
@@ -698,6 +702,7 @@ export default function CalendarViewV2() {
       console.error('Error exporting PDF:', err);
       alert(err instanceof Error ? err.message : 'Failed to export PDF');
     } finally {
+      console.log('🔵 Resetting isExportingPDF to false');
       setIsExportingPDF(false);
     }
   };
@@ -1060,7 +1065,14 @@ export default function CalendarViewV2() {
       {/* Export PDF Modal */}
       {showExportModal && (
         <>
-          <div className="fixed inset-0 z-50" onClick={() => setShowExportModal(false)} />
+          <div
+            className="fixed inset-0 z-50"
+            onClick={() => {
+              if (!isExportingPDF) {
+                setShowExportModal(false);
+              }
+            }}
+          />
           <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
             <div
               className="bg-white rounded-lg shadow-2xl border border-gray-200 max-w-md w-full mx-4 pointer-events-auto"
