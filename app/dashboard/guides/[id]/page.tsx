@@ -21,6 +21,7 @@ import { BulkActionToolbar } from '@/components/v2/toolbar/BulkActionToolbar';
 import { EditItemModal } from '@/components/v2/modals/EditItemModal';
 import { ColorPickerModal } from '@/components/v2/modals/ColorPickerModal';
 import { RepaceModal } from '@/components/v2/modals/RepaceModal';
+import { VersionHistoryModal } from '@/components/v2/modals/VersionHistoryModal';
 import {
   Subject,
   ScheduledItemWithTemplate,
@@ -121,6 +122,10 @@ export default function CalendarViewV2() {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showRepaceModal, setShowRepaceModal] = useState(false);
 
+  // Version management state
+  const [currentVersion, setCurrentVersion] = useState<number | null>(null);
+  const [showVersionModal, setShowVersionModal] = useState(false);
+
   // Fetch guide data
   useEffect(() => {
     fetchGuide();
@@ -130,6 +135,7 @@ export default function CalendarViewV2() {
   useEffect(() => {
     if (guide) {
       fetchBaseCalendarItems();
+      fetchCurrentVersion();
     }
   }, [guideId, guide]);
 
@@ -207,6 +213,36 @@ export default function CalendarViewV2() {
     } catch (err) {
       console.error('Error fetching base calendar items:', err);
       // Don't set error state - base calendar is not critical
+    }
+  };
+
+  /**
+   * Fetch current version number
+   */
+  const fetchCurrentVersion = async () => {
+    try {
+      const res = await fetch(
+        `/api/pacing-guides/${guideId}/versions`,
+        { credentials: 'include' }
+      );
+
+      if (!res.ok) {
+        // If no versions exist yet, that's okay - guide is at "base" state
+        setCurrentVersion(null);
+        return;
+      }
+
+      const data = await res.json();
+      if (data.versions && data.versions.length > 0) {
+        // Get the highest version number (most recent)
+        const latestVersion = data.versions[0].version_number;
+        setCurrentVersion(latestVersion);
+      } else {
+        setCurrentVersion(null);
+      }
+    } catch (err) {
+      console.error('Error fetching current version:', err);
+      // Don't set error state - version info is optional
     }
   };
 
@@ -678,8 +714,9 @@ export default function CalendarViewV2() {
           : '')
       );
 
-      // Refresh calendar data
+      // Refresh calendar data and version number
       await fetchScheduledItems();
+      await fetchCurrentVersion();
     } catch (err) {
       console.error('Error re-pacing calendar:', err);
       alert(err instanceof Error ? err.message : 'Failed to re-pace calendar');
@@ -852,9 +889,20 @@ export default function CalendarViewV2() {
             <p className="text-sm text-gray-600">
               {guide.district_name && `${guide.district_name} • `}
               {formatDateForDisplay(guide.first_day)} to {formatDateForDisplay(guide.last_day)}
+              {currentVersion !== null && (
+                <span className="ml-2 text-purple-600 font-medium">
+                  • Version {currentVersion}
+                </span>
+              )}
             </p>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowVersionModal(true)}
+              className="border-2 border-purple-300 hover:border-purple-400 text-purple-700 hover:text-purple-900 text-sm font-medium py-2 px-4 rounded-md transition-colors bg-transparent"
+            >
+              View Versions
+            </button>
             <button
               onClick={() => setShowRepaceModal(true)}
               className="border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 text-sm font-medium py-2 px-4 rounded-md transition-colors bg-transparent"
@@ -942,6 +990,21 @@ export default function CalendarViewV2() {
         onClose={() => setShowRepaceModal(false)}
         onRepace={handleRepace}
         currentSubject={selectedSubject}
+      />
+
+      {/* Version History Modal */}
+      <VersionHistoryModal
+        isOpen={showVersionModal}
+        onClose={() => setShowVersionModal(false)}
+        guideId={guideId}
+        currentVersion={currentVersion}
+        onRestore={() => {
+          // Refresh everything after restore
+          fetchGuide();
+          fetchScheduledItems();
+          fetchBaseCalendarItems();
+          fetchCurrentVersion();
+        }}
       />
     </div>
   );
