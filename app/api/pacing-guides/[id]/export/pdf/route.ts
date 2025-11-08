@@ -29,8 +29,11 @@ function isSchoolDay(date: Date): boolean {
 
 // Calculate weeks between first and last day
 function calculateWeeks(firstDay: string, lastDay: string) {
-  const start = new Date(firstDay);
-  const end = new Date(lastDay);
+  // IMPORTANT: Parse dates as local to avoid timezone shifts
+  const [startYear, startMonth, startDay] = firstDay.split('-').map(Number);
+  const start = new Date(startYear, startMonth - 1, startDay);
+  const [endYear, endMonth, endDay] = lastDay.split('-').map(Number);
+  const end = new Date(endYear, endMonth - 1, endDay);
   const weeks: Array<{ weekNumber: number; startDate: Date; days: Date[] }> = [];
 
   let currentWeekStart = new Date(start);
@@ -114,6 +117,29 @@ function hexToRGBA(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+// Helper function to parse date string as local date (avoid timezone shifts)
+function parseDateAsLocal(dateString: string): Date {
+  // For YYYY-MM-DD format, parse as local date
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  // For ISO 8601 format from PostgreSQL (e.g., "2025-07-21T00:00:00.000Z")
+  // Extract date parts and create as local date to avoid timezone shifts
+  if (dateString.includes('T')) {
+    const date = new Date(dateString);
+    const year = date.getUTCFullYear();
+    const month = date.getUTCMonth();
+    const day = date.getUTCDate();
+    return new Date(year, month, day);
+  }
+
+  // Fallback: try basic parsing
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 // Generate HTML for a calendar
 function generateCalendarHTML(
   guide: any,
@@ -138,7 +164,8 @@ function generateCalendarHTML(
         // Keep weeks where the week END date (Friday) is on or after startFromDate
         const weekEndDate = new Date(week.startDate);
         weekEndDate.setDate(weekEndDate.getDate() + 4); // Friday is 4 days after Monday
-        const cutoffDate = new Date(startFromDate);
+        // IMPORTANT: Parse startFromDate as local date to avoid timezone shifts
+        const cutoffDate = parseDateAsLocal(startFromDate);
         return weekEndDate >= cutoffDate;
       })
     : allWeeks;
@@ -146,7 +173,8 @@ function generateCalendarHTML(
   // Helper to get base items (events) for a date
   const getBaseItemsForDate = (date: Date) => {
     return baseItems.filter((item) => {
-      const itemStart = new Date(item.start_date);
+      // IMPORTANT: Parse item start_date as local to avoid timezone shifts
+      const itemStart = parseDateAsLocal(item.start_date);
       const itemEnd = addSchoolDays(itemStart, item.duration_days - 1);
       return isSchoolDay(date) && date >= itemStart && date <= itemEnd;
     });
@@ -155,7 +183,8 @@ function generateCalendarHTML(
   // Helper to get subject items (components) for a date
   const getSubjectItemsForDate = (date: Date) => {
     return subjectItems.filter((item) => {
-      const itemStart = new Date(item.start_date);
+      // IMPORTANT: Parse item start_date as local to avoid timezone shifts
+      const itemStart = parseDateAsLocal(item.start_date);
       const itemEnd = addSchoolDays(itemStart, item.duration_days - 1);
       return isSchoolDay(date) && date >= itemStart && date <= itemEnd;
     });
@@ -167,8 +196,9 @@ function generateCalendarHTML(
     return `${date.getMonth() + 1}/${date.getDate()}/${year}`;
   };
 
-  const firstDay = new Date(guide.first_day);
-  const lastDay = new Date(guide.last_day);
+  // IMPORTANT: Parse guide dates as local to avoid timezone shifts
+  const firstDay = parseDateAsLocal(guide.first_day);
+  const lastDay = parseDateAsLocal(guide.last_day);
 
   let html = `
 <!DOCTYPE html>
