@@ -5,6 +5,41 @@ import pool from '@/lib/db';
 import puppeteer from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
 
+// Helper function to parse date string as local date (avoid timezone shifts)
+function parseDateAsLocal(dateString: string | Date): Date {
+  // If already a Date object, return as-is
+  if (dateString instanceof Date) {
+    return dateString;
+  }
+
+  // Ensure we have a string
+  if (typeof dateString !== 'string') {
+    console.error('parseDateAsLocal received non-string, non-Date:', dateString, typeof dateString);
+    // Try to convert to string
+    dateString = String(dateString);
+  }
+
+  // For YYYY-MM-DD format, parse as local date
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  // For ISO 8601 format from PostgreSQL (e.g., "2025-07-21T00:00:00.000Z")
+  // Extract date parts and create as local date to avoid timezone shifts
+  if (dateString.includes('T')) {
+    const date = new Date(dateString);
+    const year = date.getUTCFullYear();
+    const month = date.getUTCMonth();
+    const day = date.getUTCDate();
+    return new Date(year, month, day);
+  }
+
+  // Fallback: try basic parsing
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 // Helper function to add school days (skipping weekends)
 function addSchoolDays(startDate: Date, numDays: number): Date {
   const result = new Date(startDate);
@@ -30,10 +65,9 @@ function isSchoolDay(date: Date): boolean {
 // Calculate weeks between first and last day
 function calculateWeeks(firstDay: string, lastDay: string) {
   // IMPORTANT: Parse dates as local to avoid timezone shifts
-  const [startYear, startMonth, startDay] = firstDay.split('-').map(Number);
-  const start = new Date(startYear, startMonth - 1, startDay);
-  const [endYear, endMonth, endDay] = lastDay.split('-').map(Number);
-  const end = new Date(endYear, endMonth - 1, endDay);
+  // Use parseDateAsLocal to handle different formats safely
+  const start = parseDateAsLocal(firstDay);
+  const end = parseDateAsLocal(lastDay);
   const weeks: Array<{ weekNumber: number; startDate: Date; days: Date[] }> = [];
 
   let currentWeekStart = new Date(start);
@@ -115,29 +149,6 @@ function hexToRGBA(hex: string, alpha: number): string {
   const b = parseInt(hex.substring(4, 6), 16);
 
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
-// Helper function to parse date string as local date (avoid timezone shifts)
-function parseDateAsLocal(dateString: string): Date {
-  // For YYYY-MM-DD format, parse as local date
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-    const [year, month, day] = dateString.split('-').map(Number);
-    return new Date(year, month - 1, day);
-  }
-
-  // For ISO 8601 format from PostgreSQL (e.g., "2025-07-21T00:00:00.000Z")
-  // Extract date parts and create as local date to avoid timezone shifts
-  if (dateString.includes('T')) {
-    const date = new Date(dateString);
-    const year = date.getUTCFullYear();
-    const month = date.getUTCMonth();
-    const day = date.getUTCDate();
-    return new Date(year, month, day);
-  }
-
-  // Fallback: try basic parsing
-  const [year, month, day] = dateString.split('-').map(Number);
-  return new Date(year, month - 1, day);
 }
 
 // Generate HTML for a calendar
