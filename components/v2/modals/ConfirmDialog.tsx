@@ -50,25 +50,35 @@ export function ConfirmDialog({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-        <div className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+    <>
+      {/* Invisible backdrop for click-to-close */}
+      <div
+        className="fixed inset-0 z-50"
+        onClick={onCancel}
+      />
+
+      {/* Modal window */}
+      <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+        <div
+          className="bg-white rounded-lg p-6 w-full max-w-md shadow-2xl border border-gray-200 pointer-events-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h2 className="text-xl font-bold mb-4 text-gray-900">
             {title}
-          </h3>
+          </h2>
           <p className="text-gray-600 mb-6">
             {message}
           </p>
-          <div className="flex justify-end gap-3">
+          <div className="flex gap-2 justify-end">
             <button
               onClick={onCancel}
-              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+              className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 text-gray-900"
             >
               {cancelText}
             </button>
             <button
               onClick={onConfirm}
-              className={`px-4 py-2 text-white rounded-md transition-colors ${variantStyles[variant]}`}
+              className={`px-4 py-2 text-white rounded transition-colors ${variantStyles[variant]}`}
               autoFocus
             >
               {confirmText}
@@ -76,6 +86,6 @@ export function ConfirmDialog({
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
