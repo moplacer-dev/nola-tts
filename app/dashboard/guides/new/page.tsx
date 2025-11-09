@@ -117,6 +117,9 @@ export default function NewGuidePage() {
       setExtractedEvents(result.events);
       setExtractionNotes(result.extraction_notes || '');
 
+      // Auto-select all extracted events by default
+      setSelectedEvents(new Set(result.events.map((_: any, i: number) => i)));
+
       // Move to Step 3 (Review) - then Step 4 will be auto-populate
       setCurrentStep(3);
     } catch (err) {
@@ -478,7 +481,7 @@ export default function NewGuidePage() {
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
-                      <th className="py-3 pl-4 pr-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider" style={{ width: '50px' }}>
+                      <th className="py-3 pl-6 pr-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-16">
                         <input
                           type="checkbox"
                           checked={selectedEvents.size === extractedEvents.length}
@@ -486,13 +489,13 @@ export default function NewGuidePage() {
                           className="rounded border-gray-300 text-[#9333EA] focus:ring-[#9333EA]"
                         />
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider" style={{ width: '45%' }}>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                         Event Name
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider" style={{ width: '25%' }}>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-48">
                         Start Date
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider" style={{ width: '20%' }}>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-32">
                         Duration
                       </th>
                     </tr>
@@ -500,7 +503,7 @@ export default function NewGuidePage() {
                   <tbody className="divide-y divide-gray-200">
                     {extractedEvents.map((event, index) => (
                       <tr key={index} className={selectedEvents.has(index) ? 'bg-purple-50' : 'hover:bg-gray-50'}>
-                        <td className="py-3 pl-4 pr-2">
+                        <td className="py-3 pl-6 pr-3">
                           <input
                             type="checkbox"
                             checked={selectedEvents.has(index)}
@@ -508,29 +511,29 @@ export default function NewGuidePage() {
                             className="rounded border-gray-300 text-[#9333EA] focus:ring-[#9333EA]"
                           />
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-6 py-3">
                           <input
                             type="text"
                             value={event.event_name}
                             onChange={(e) => updateEvent(index, 'event_name', e.target.value)}
-                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#9333EA] text-gray-900"
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#9333EA] text-gray-900"
                           />
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-6 py-3">
                           <input
                             type="date"
                             value={event.start_date}
                             onChange={(e) => updateEvent(index, 'start_date', e.target.value)}
-                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#9333EA] text-gray-900 font-sans"
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#9333EA] text-gray-900 font-sans"
                           />
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-6 py-3">
                           <input
                             type="number"
                             min="1"
                             value={event.duration_days}
                             onChange={(e) => updateEvent(index, 'duration_days', parseInt(e.target.value))}
-                            className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#9333EA] text-gray-900"
+                            className="w-24 px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#9333EA] text-gray-900"
                           />
                         </td>
                       </tr>

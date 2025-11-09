@@ -98,6 +98,28 @@ export function VersionHistoryModal({
     }
   };
 
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        if (showConfirm !== null) {
+          setShowConfirm(null);
+        } else {
+          onClose();
+        }
+      } else if (e.key === 'Enter' && showConfirm !== null && restoringVersion === null) {
+        e.preventDefault();
+        handleRestore(showConfirm);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, showConfirm, restoringVersion, onClose]);
+
   if (!isOpen) return null;
 
   const formatDate = (dateString: string) => {

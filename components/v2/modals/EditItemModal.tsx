@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ScheduledItemWithTemplate, UpdateScheduledItemRequest } from '@/types/v2';
 
 interface EditItemModalProps {
@@ -47,6 +47,22 @@ export function EditItemModal({ item, blockedDates, onClose, onSave }: EditItemM
       setIsSaving(false);
     }
   };
+
+  // Handle Enter key to save
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && !isSaving) {
+        e.preventDefault();
+        handleSave();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isSaving, handleSave, onClose]);
 
   const placeholderTitle = item.title_override || item.display_name || 'Component';
 

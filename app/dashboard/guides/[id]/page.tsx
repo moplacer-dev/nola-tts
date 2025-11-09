@@ -22,6 +22,7 @@ import { EditItemModal } from '@/components/v2/modals/EditItemModal';
 import { ColorPickerModal } from '@/components/v2/modals/ColorPickerModal';
 import { RepaceModal } from '@/components/v2/modals/RepaceModal';
 import { VersionHistoryModal } from '@/components/v2/modals/VersionHistoryModal';
+import { ConfirmDialog } from '@/components/v2/modals/ConfirmDialog';
 import {
   Subject,
   ScheduledItemWithTemplate,
@@ -121,6 +122,7 @@ export default function CalendarViewV2() {
   const [editingItem, setEditingItem] = useState<ScheduledItemWithTemplate | null>(null);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showRepaceModal, setShowRepaceModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Version management state
   const [currentVersion, setCurrentVersion] = useState<number | null>(null);
@@ -568,16 +570,18 @@ export default function CalendarViewV2() {
   };
 
   /**
-   * Handle delete selected items
+   * Handle delete selected items - shows confirmation dialog
    */
-  const handleDelete = async () => {
+  const handleDelete = useCallback(() => {
     if (selectedItems.size === 0) return;
+    setShowDeleteConfirm(true);
+  }, [selectedItems]);
 
-    const confirmDelete = window.confirm(
-      `Delete ${selectedItems.size} item(s)?`
-    );
-
-    if (!confirmDelete) return;
+  /**
+   * Confirm delete action - actually performs the deletion
+   */
+  const confirmDelete = useCallback(async () => {
+    setShowDeleteConfirm(false);
 
     try {
       // Delete each selected item
@@ -602,7 +606,27 @@ export default function CalendarViewV2() {
       console.error('Error deleting items:', err);
       alert('Failed to delete items');
     }
-  };
+  }, [selectedItems, fetchScheduledItems, fetchBaseCalendarItems]);
+
+  // Keyboard shortcuts - Delete/Backspace to delete selected items
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Delete/Backspace: Delete selected items
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedItems.size > 0) {
+        // Don't trigger if user is typing in an input field
+        const target = e.target as HTMLElement;
+        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+          return;
+        }
+
+        e.preventDefault();
+        handleDelete();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedItems, handleDelete]);
 
   /**
    * Clear selection
@@ -1157,6 +1181,18 @@ export default function CalendarViewV2() {
           </div>
         </>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title="Delete Items"
+        message={`Are you sure you want to delete ${selectedItems.size} item(s)? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+        variant="danger"
+      />
     </div>
   );
 }

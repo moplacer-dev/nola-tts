@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface RepaceModalProps {
   isOpen: boolean;
@@ -18,8 +18,8 @@ export function RepaceModal({ isOpen, onClose, onRepace, currentSubject }: Repac
 
   if (!isOpen) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setIsSubmitting(true);
 
     const daysToShift = direction === 'forward' ? days : -days;
@@ -37,6 +37,21 @@ export function RepaceModal({ isOpen, onClose, onRepace, currentSubject }: Repac
       setIsSubmitting(false);
     }
   };
+
+  // Handle Escape key to close
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   return (
     <>
