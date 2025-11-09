@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface Version {
   id: string;
@@ -65,7 +65,7 @@ export function VersionHistoryModal({
     }
   };
 
-  const handleRestore = async (versionNumber: number) => {
+  const handleRestore = useCallback(async (versionNumber: number) => {
     setRestoringVersion(versionNumber);
 
     try {
@@ -96,7 +96,7 @@ export function VersionHistoryModal({
     } finally {
       setRestoringVersion(null);
     }
-  };
+  }, [guideId, onRestore, onClose]);
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -118,7 +118,7 @@ export function VersionHistoryModal({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, showConfirm, restoringVersion, onClose]);
+  }, [isOpen, showConfirm, restoringVersion, onClose, handleRestore]);
 
   if (!isOpen) return null;
 

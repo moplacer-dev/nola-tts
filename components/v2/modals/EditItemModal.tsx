@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ScheduledItemWithTemplate, UpdateScheduledItemRequest } from '@/types/v2';
 
 interface EditItemModalProps {
@@ -34,7 +34,7 @@ export function EditItemModal({ item, blockedDates, onClose, onSave }: EditItemM
     initialMetadataState: metadata
   });
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
       const updates: UpdateScheduledItemRequest = {
@@ -46,7 +46,7 @@ export function EditItemModal({ item, blockedDates, onClose, onSave }: EditItemM
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [titleOverride, metadata, onSave, repeatDays]);
 
   // Handle Enter key to save
   useEffect(() => {
