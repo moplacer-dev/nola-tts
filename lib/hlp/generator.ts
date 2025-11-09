@@ -141,15 +141,14 @@ export async function generateHLPDocument(
 /**
  * Generate filename for HLP document
  *
- * Format: "HLP_[SchoolName]_[TeacherName]_[SchoolYear].docx"
+ * Format: "[SchoolName]_[Subject]_HLP.docx"
  * Removes spaces and special characters for safe filenames
  */
 export function generateFilename(data: DOCXGenerationData): string {
   const sanitize = (str: string) => str.replace(/[^a-zA-Z0-9]/g, '');
 
   const schoolName = sanitize(data.hlp.school_name);
-  const teacherName = sanitize(data.hlp.teacher_name);
-  const schoolYear = sanitize(data.hlp.school_year);
+  const subject = sanitize(data.hlp.subject);
 
-  return `HLP_${schoolName}_${teacherName}_${schoolYear}.docx`;
+  return `${schoolName}_${subject}_HLP.docx`;
 }
