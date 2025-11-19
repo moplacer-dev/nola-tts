@@ -178,7 +178,7 @@ export async function POST(
             item.blocks_curriculum || false,
             item.title_override,
             item.color_override,
-            item.metadata || {},
+            JSON.stringify(item.metadata || {}),
             item.notes,
             item.source || 'library',
             item.created_at || new Date(),
