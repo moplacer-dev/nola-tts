@@ -34,13 +34,13 @@ async function createVersionSnapshot(
     [guideId]
   );
 
-  const snapshotData = snapshotResult.rows[0]?.snapshot_data || '[]';
+  const snapshotData = snapshotResult.rows[0]?.snapshot_data || [];
 
   // Insert the snapshot
   await pool.query(
     `INSERT INTO pacing_guide_versions (guide_id, version_number, version_label, snapshot_data, created_by)
      VALUES ($1, $2, $3, $4, $5)`,
-    [guideId, versionNumber, versionLabel, snapshotData, userId]
+    [guideId, versionNumber, versionLabel, JSON.stringify(snapshotData), userId]
   );
 
   console.log('[RESTORE] Created backup snapshot:', {
