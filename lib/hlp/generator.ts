@@ -5,9 +5,39 @@
  * Matches exact formatting from Flask implementation
  */
 
-import { Document, Paragraph, TextRun, Packer, AlignmentType, PageOrientation } from 'docx';
+import { Document, Paragraph, TextRun, Packer, AlignmentType, PageOrientation, ImageRun, HorizontalPositionRelativeFrom, VerticalPositionRelativeFrom, HorizontalPositionAlign, VerticalPositionAlign, TextWrappingType, TextWrappingSide } from 'docx';
 import { DOCXGenerationData } from './types';
 import { buildHLPTable } from './tableBuilder';
+import * as fs from 'fs';
+import * as path from 'path';
+
+/**
+ * Load the Star Academy logo image
+ * Returns the image buffer or null if not found
+ */
+function loadLogoImage(): Buffer | null {
+  try {
+    // Try multiple possible paths for the logo
+    const possiblePaths = [
+      path.join(process.cwd(), 'public', 'star-academy-logo.png'),
+      path.join(process.cwd(), 'nola-ess-app', 'public', 'star-academy-logo.png'),
+      '/app/public/star-academy-logo.png', // Render deployment path
+    ];
+
+    for (const logoPath of possiblePaths) {
+      if (fs.existsSync(logoPath)) {
+        console.log('🔵 [Generator] Found logo at:', logoPath);
+        return fs.readFileSync(logoPath);
+      }
+    }
+
+    console.warn('🟡 [Generator] Logo not found at any expected path');
+    return null;
+  } catch (error) {
+    console.error('🔴 [Generator] Error loading logo:', error);
+    return null;
+  }
+}
 
 /**
  * Create document header paragraph with school information
@@ -31,6 +61,45 @@ function createHeaderParagraph(data: DOCXGenerationData): Paragraph {
     spacing: {
       after: 200, // Add space after header before table
     },
+  });
+}
+
+/**
+ * Create logo paragraph with the Star Academy logo positioned at top-right
+ * Uses floating positioning to place logo in top-right corner
+ */
+function createLogoParagraph(logoBuffer: Buffer): Paragraph {
+  return new Paragraph({
+    children: [
+      new ImageRun({
+        type: 'png',
+        data: logoBuffer,
+        transformation: {
+          width: 107, // ~1.07 inches at 100 DPI (matching screenshot)
+          height: 32, // ~0.32 inches at 100 DPI (matching screenshot)
+        },
+        floating: {
+          horizontalPosition: {
+            relative: HorizontalPositionRelativeFrom.MARGIN,
+            align: HorizontalPositionAlign.RIGHT,
+          },
+          verticalPosition: {
+            relative: VerticalPositionRelativeFrom.PARAGRAPH,
+            offset: 0,
+          },
+          wrap: {
+            type: TextWrappingType.SQUARE,
+            side: TextWrappingSide.LEFT,
+          },
+          margins: {
+            top: 0,
+            bottom: 0,
+            left: 114300, // ~0.125 inch margin on left of image
+            right: 0,
+          },
+        },
+      }),
+    ],
   });
 }
 
@@ -83,15 +152,35 @@ export async function generateHLPDocument(
   // Sort modules by module_number to ensure correct order
   const sortedModules = [...data.modules].sort((a, b) => a.module_number - b.module_number);
 
+  // Load logo image
+  console.log('🔵 [Generator] Loading logo image...');
+  const logoBuffer = loadLogoImage();
+
   // Create document header
   console.log('🔵 [Generator] Creating header paragraph...');
   const headerParagraph = createHeaderParagraph(data);
+
+  // Build section children array (logo + header + table)
+  const sectionChildren: any[] = [];
+
+  // Add logo paragraph if logo was loaded successfully
+  if (logoBuffer) {
+    console.log('🔵 [Generator] Adding logo to document...');
+    sectionChildren.push(createLogoParagraph(logoBuffer));
+  } else {
+    console.log('🟡 [Generator] Skipping logo (not found)');
+  }
+
+  // Add header and table
+  sectionChildren.push(headerParagraph);
 
   // Build HLP table
   console.log('🔵 [Generator] Building HLP table...');
   try {
     const table = buildHLPTable(sortedModules, exportOptions);
     console.log('🔵 [Generator] Table built successfully');
+
+    sectionChildren.push(table);
 
     // Create document
     console.log('🔵 [Generator] Creating Document object...');
@@ -115,7 +204,7 @@ export async function generateHLPDocument(
               },
             },
           },
-          children: [headerParagraph, table],
+          children: sectionChildren,
         },
       ],
     });
