@@ -559,17 +559,6 @@ export default function DocumentsPage() {
                 <span className="ml-3 text-sm font-medium text-gray-700">PBA/Assessments</span>
               </label>
 
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={exportOptions.includeEnrichments}
-                  onChange={(e) =>
-                    setExportOptions({ ...exportOptions, includeEnrichments: e.target.checked })
-                  }
-                  className="w-4 h-4 text-[#9333EA] border-gray-300 rounded focus:ring-[#9333EA]"
-                />
-                <span className="ml-3 text-sm font-medium text-gray-700">Enrichments</span>
-              </label>
             </div>
 
             <div className="flex gap-3 justify-end">
