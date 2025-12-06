@@ -4,6 +4,39 @@ import { authOptions } from '@/lib/auth';
 import pool from '@/lib/db';
 import puppeteer from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
+import * as fs from 'fs';
+import * as path from 'path';
+
+/**
+ * Load the Star Academy logo as base64 for embedding in HTML
+ * Returns base64 data URI or null if not found
+ */
+function loadLogoAsBase64(): string | null {
+  try {
+    const possiblePaths = [
+      path.join(process.cwd(), 'public', 'star-academy-logo.png'),
+      path.join(process.cwd(), 'nola-ess-app', 'public', 'star-academy-logo.png'),
+      '/app/public/star-academy-logo.png', // Render deployment path
+    ];
+
+    for (const logoPath of possiblePaths) {
+      if (fs.existsSync(logoPath)) {
+        console.log('🔵 [PDF Export] Found logo at:', logoPath);
+        const logoBuffer = fs.readFileSync(logoPath);
+        const base64 = logoBuffer.toString('base64');
+        const dataUri = `data:image/png;base64,${base64}`;
+        console.log('🔵 [PDF Export] Base64 data URI length:', dataUri.length);
+        return dataUri;
+      }
+    }
+
+    console.warn('🟡 [PDF Export] Logo not found at any expected path');
+    return null;
+  } catch (error) {
+    console.error('🔴 [PDF Export] Error loading logo:', error);
+    return null;
+  }
+}
 
 // Helper function to parse date string as local date (avoid timezone shifts)
 function parseDateAsLocal(dateString: string | Date): Date {
@@ -158,7 +191,8 @@ function generateCalendarHTML(
   baseItems: any[], // Items from base calendar (holidays, etc.)
   subjectItems: any[], // Items from subject calendar (curriculum components)
   currentVersion: number | null, // Current version number (or null if no versions)
-  startFromDate?: string | null // Optional: Only include weeks from this date onwards
+  startFromDate?: string | null, // Optional: Only include weeks from this date onwards
+  logoBase64?: string | null // Optional: Base64 logo to display in header
 ) {
   const subjectLabels: Record<string, string> = {
     base: 'Base Calendar',
@@ -243,9 +277,24 @@ function generateCalendarHTML(
     }
 
     .header {
-      margin-bottom: 6px;
+      margin-bottom: 18px;
+      padding-top: 15px;
       page-break-inside: avoid;
       page-break-after: avoid;
+      position: relative;
+      min-height: 55px;
+    }
+
+    .header-content {
+      display: inline-block;
+    }
+
+    .header-logo {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 45px;
+      width: auto;
     }
 
     .calendar-container {
@@ -254,15 +303,15 @@ function generateCalendarHTML(
     }
 
     .school-name {
-      font-size: 15px;
+      font-size: 22px;
       font-weight: 600;
       color: #111827;
       margin-bottom: 2px;
     }
 
     .school-info {
-      font-size: 9px;
-      color: #6B7280;
+      font-size: 12px;
+      color: #374151;
     }
 
     /* CSS Grid Calendar Container */
@@ -271,16 +320,16 @@ function generateCalendarHTML(
       display: grid;
       grid-template-columns: 45px repeat(5, 1fr);
       gap: 0;
-      border: 0.5px solid #000000;
+      border: none;
     }
 
-    /* Header Row */
+    /* Header Row (Monday, Tuesday, etc.) */
     .header-cell {
       background-color: #F9FAFB;
       color: #374151;
       padding: 4px 3px;
       font-weight: 600;
-      font-size: 9px;
+      font-size: 11px;
       text-align: center;
       border: 0.5px solid #000000;
     }
@@ -289,10 +338,10 @@ function generateCalendarHTML(
     .week-cell {
       background-color: #F9FAFB;
       padding: 3px 2px;
-      font-size: 8px;
+      font-size: 10px;
       display: flex;
       flex-direction: column;
-      justify-content: flex-start;
+      justify-content: center;
       align-items: center;
       min-height: 38px;
       border: 0.5px solid #000000;
@@ -302,12 +351,12 @@ function generateCalendarHTML(
       font-weight: 600;
       color: #374151;
       margin-bottom: 1px;
-      font-size: 8px;
+      font-size: 10px;
     }
 
     .week-date {
-      color: #6B7280;
-      font-size: 7px;
+      color: #374151;
+      font-size: 9px;
     }
 
     /* Day Cells */
@@ -329,7 +378,7 @@ function generateCalendarHTML(
     /* Items in cells - match app styling */
     .item {
       padding: 2px 4px;
-      font-size: 9.5px;
+      font-size: 11px;
       line-height: 1.25;
       font-weight: 500;
       border-radius: 3px;
@@ -352,11 +401,13 @@ function generateCalendarHTML(
 <body>
   <div class="subject-section">
     <div class="header">
-      <div class="school-name">${guide.school_name} ${subjectLabels[subject]} Pacing Guide</div>
-      <div class="school-info">
-        ${currentVersion !== null ? `Version ${currentVersion} • ` : ''}${guide.district_name} • Grade ${guide.grade_level} •
-        ${formatDate(firstDay)} - ${formatDate(lastDay)}
+      <div class="header-content">
+        <div class="school-name">${guide.school_name} ${subjectLabels[subject]} Pacing Guide</div>
+        <div class="school-info">
+          ${currentVersion !== null ? `Version ${currentVersion} • ` : ''}${guide.district_name ? `${guide.district_name}  ` : ''}Grade ${guide.grade_level} • ${formatDate(firstDay)} - ${formatDate(lastDay)}
+        </div>
       </div>
+      ${logoBase64 ? `<img src="${logoBase64}" alt="Star Academy" class="header-logo" />` : ''}
     </div>
 
     <div class="calendar-container">
@@ -490,21 +541,31 @@ export async function POST(
     );
     const allItems = itemsResult.rows;
 
-    // Fetch current version number
-    const versionResult = await pool.query(
-      `SELECT version_number
-       FROM pacing_guide_versions
-       WHERE guide_id = $1
-       ORDER BY version_number DESC
-       LIMIT 1`,
-      [id]
-    );
-    const currentVersion = versionResult.rows.length > 0 ? versionResult.rows[0].version_number : null;
+    // Fetch current version number (with fallback if table doesn't exist)
+    let currentVersion: number | null = null;
+    try {
+      const versionResult = await pool.query(
+        `SELECT version_number
+         FROM pacing_guide_versions
+         WHERE guide_id = $1
+         ORDER BY version_number DESC
+         LIMIT 1`,
+        [id]
+      );
+      currentVersion = versionResult.rows.length > 0 ? versionResult.rows[0].version_number : null;
+    } catch (error) {
+      console.warn('🟡 [PDF Export] Could not fetch version (table may not exist):', error);
+      currentVersion = null;
+    }
 
     // Determine which subjects to export (exclude base from "all")
     const subjects = subject === 'all'
       ? ['ela', 'math', 'science', 'social_studies']
       : [subject];
+
+    // Load logo for PDF header
+    const logoBase64 = loadLogoAsBase64();
+    console.log('🔵 [PDF Export] Logo loaded:', logoBase64 ? `${logoBase64.length} chars` : 'null');
 
     // Generate HTML for each subject
     const htmlPages: string[] = [];
@@ -515,16 +576,48 @@ export async function POST(
       const subjectItems = allItems.filter(item => item.calendar_type === subj);
 
       // For subject calendars, pass both base items (events) and subject items (components)
-      const html = generateCalendarHTML(guide, subj, baseItems, subjectItems, currentVersion, startFromDate);
+      const html = generateCalendarHTML(guide, subj, baseItems, subjectItems, currentVersion, startFromDate, logoBase64);
       htmlPages.push(html);
     }
 
-    // Launch Puppeteer with @sparticuz/chromium (works on Render)
-    const browser = await puppeteer.launch({
-      args: chromium.args,
-      executablePath: await chromium.executablePath(),
-      headless: true,
-    });
+    // Launch Puppeteer - use @sparticuz/chromium in production, local Chrome in development
+    const isProduction = process.env.NODE_ENV === 'production' || process.env.RENDER;
+
+    let browser;
+    if (isProduction) {
+      // Use @sparticuz/chromium for serverless (Render, AWS Lambda, etc.)
+      browser = await puppeteer.launch({
+        args: chromium.args,
+        executablePath: await chromium.executablePath(),
+        headless: true,
+      });
+    } else {
+      // Use local Chrome for development (puppeteer-core requires explicit path)
+      const localChromePaths = [
+        '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', // macOS
+        '/usr/bin/google-chrome', // Linux
+        '/usr/bin/chromium-browser', // Linux Chromium
+        'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', // Windows
+      ];
+
+      let executablePath = '';
+      for (const chromePath of localChromePaths) {
+        if (fs.existsSync(chromePath)) {
+          executablePath = chromePath;
+          break;
+        }
+      }
+
+      if (!executablePath) {
+        throw new Error('Chrome not found. Please install Google Chrome for local PDF generation.');
+      }
+
+      browser = await puppeteer.launch({
+        headless: true,
+        executablePath,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      });
+    }
 
     const page = await browser.newPage();
 
