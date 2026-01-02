@@ -1,6 +1,7 @@
 'use client';
 
 import { SessionProvider } from 'next-auth/react';
+import FeedbackButton from '@/components/FeedbackButton';
 
 export default function AdminLayout({
   children,
@@ -10,6 +11,7 @@ export default function AdminLayout({
   return (
     <SessionProvider>
       {children}
+      <FeedbackButton />
     </SessionProvider>
   );
 }

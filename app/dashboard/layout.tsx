@@ -1,6 +1,7 @@
 'use client';
 
 import Header from '@/components/Header';
+import FeedbackButton from '@/components/FeedbackButton';
 import { SessionProvider } from 'next-auth/react';
 
 export default function DashboardLayout({
@@ -12,6 +13,7 @@ export default function DashboardLayout({
     <SessionProvider>
       <Header />
       {children}
+      <FeedbackButton />
     </SessionProvider>
   );
 }
