@@ -29,10 +29,8 @@ export async function POST(request: Request) {
     // Use session email as fallback
     const submitterEmail = email || session?.user?.email || '';
 
-    // Get today's date in YYYY-MM-DD format for Airtable
-    const today = new Date().toISOString().split('T')[0];
-
     // Send to Airtable
+    // Note: "Date Received" should be a "Created time" field in Airtable (auto-populated)
     const airtableResponse = await fetch(
       `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${process.env.AIRTABLE_FEEDBACK_TABLE_ID}`,
       {
@@ -49,7 +47,6 @@ export async function POST(request: Request) {
                 'Description': description.trim(),
                 'Email': submitterEmail,
                 'App': 'NOLA.ess',
-                'Date Received': today,
                 'Status': 'New',
               },
             },
