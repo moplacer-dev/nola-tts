@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import Header from '@/components/Header';
+import AdminTabs from '@/components/admin/AdminTabs';
 import CreateUserModal from '@/components/admin/CreateUserModal';
 import EditUserModal from '@/components/admin/EditUserModal';
 
@@ -101,31 +101,7 @@ export default function AdminUsersPage() {
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
       <Header />
 
-      {/* Admin Navigation Tabs */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex gap-8">
-            <Link
-              href="/admin/users"
-              className="border-b-2 border-[#9333EA] text-[#9333EA] py-4 px-1 text-sm font-medium"
-            >
-              User Management
-            </Link>
-            <Link
-              href="/admin/components"
-              className="border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-4 px-1 text-sm font-medium"
-            >
-              Component Templates
-            </Link>
-            <Link
-              href="/admin/hlp-templates"
-              className="border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-4 px-1 text-sm font-medium"
-            >
-              HLP Module Templates
-            </Link>
-          </nav>
-        </div>
-      </div>
+      <AdminTabs />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6 flex justify-between items-center">
