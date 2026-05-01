@@ -43,6 +43,23 @@ function formatDate(dateString: string | null) {
   });
 }
 
+function safeFilenamePart(value: string | null | undefined): string {
+  if (!value) return 'unknown';
+  return value.replace(/[^a-z0-9_-]+/gi, '_').replace(/^_+|_+$/g, '') || 'unknown';
+}
+
+function downloadJson(filename: string, data: unknown) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 export default function AdminUserDocumentsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -107,6 +124,30 @@ export default function AdminUserDocumentsPage() {
       if (activeUserIdRef.current === userId) {
         setLoadingDocs(false);
       }
+    }
+  }
+
+  async function exportGuideJson(guide: PacingGuide) {
+    try {
+      const res = await fetch(`/api/admin/pacing-guides/${guide.id}`);
+      if (!res.ok) throw new Error('Failed to fetch pacing guide');
+      const data = await res.json();
+      const filename = `pacing-guide-${safeFilenamePart(guide.school_name)}-grade${safeFilenamePart(guide.grade_level)}.json`;
+      downloadJson(filename, data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to export pacing guide');
+    }
+  }
+
+  async function exportHlpJson(hlp: HLP) {
+    try {
+      const res = await fetch(`/api/admin/horizontal-lesson-plans/${hlp.id}`);
+      if (!res.ok) throw new Error('Failed to fetch horizontal lesson plan');
+      const data = await res.json();
+      const filename = `hlp-${safeFilenamePart(hlp.school_name)}-${safeFilenamePart(hlp.teacher_name)}-${safeFilenamePart(hlp.subject)}.json`;
+      downloadJson(filename, data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to export horizontal lesson plan');
     }
   }
 
@@ -202,6 +243,7 @@ export default function AdminUserDocumentsPage() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">School Year</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -214,6 +256,14 @@ export default function AdminUserDocumentsPage() {
                           {formatDate(g.first_day)} – {formatDate(g.last_day)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{formatDate(g.created_at)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <button
+                            onClick={() => exportGuideJson(g)}
+                            className="text-[#9333EA] hover:text-[#7928CA]"
+                          >
+                            Export JSON
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -243,6 +293,7 @@ export default function AdminUserDocumentsPage() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">School Year</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Modules</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -256,6 +307,14 @@ export default function AdminUserDocumentsPage() {
                           {h.module_count} ({h.module_names.filter(Boolean).join(', ') || '—'})
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{formatDate(h.created_at)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <button
+                            onClick={() => exportHlpJson(h)}
+                            className="text-[#9333EA] hover:text-[#7928CA]"
+                          >
+                            Export JSON
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
