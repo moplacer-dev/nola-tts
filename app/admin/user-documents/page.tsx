@@ -21,8 +21,6 @@ interface PacingGuide {
   first_day: string;
   last_day: string;
   created_at: string;
-  current_version: number | null;
-  last_repaced_at: string | null;
 }
 
 interface HLP {

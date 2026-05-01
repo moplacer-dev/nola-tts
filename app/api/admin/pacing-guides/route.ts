@@ -6,7 +6,7 @@ import pool from '@/lib/db';
  * GET /api/admin/pacing-guides?userId=<uuid>
  *
  * Admin-only: list all pacing guides belonging to the specified user.
- * Returns the same shape as GET /api/pacing-guides for the user-scoped view.
+ * Returns the columns the User Documents page actually displays.
  */
 export async function GET(request: NextRequest) {
   const adminCheck = await requireAdmin();
@@ -25,21 +25,17 @@ export async function GET(request: NextRequest) {
   try {
     const result = await pool.query(
       `SELECT
-        pg.id,
-        pg.school_name,
-        pg.district_name,
-        pg.grade_level,
-        pg.first_day,
-        pg.last_day,
-        pg.created_at,
-        pg.updated_at,
-        MAX(v.version_number) as current_version,
-        MAX(v.created_at) as last_repaced_at
-       FROM pacing_guides pg
-       LEFT JOIN pacing_guide_versions v ON pg.id = v.guide_id
-       WHERE pg.user_id = $1
-       GROUP BY pg.id, pg.school_name, pg.district_name, pg.grade_level, pg.first_day, pg.last_day, pg.created_at, pg.updated_at
-       ORDER BY pg.created_at DESC`,
+        id,
+        school_name,
+        district_name,
+        grade_level,
+        first_day,
+        last_day,
+        created_at,
+        updated_at
+       FROM pacing_guides
+       WHERE user_id = $1
+       ORDER BY created_at DESC`,
       [userId]
     );
 
