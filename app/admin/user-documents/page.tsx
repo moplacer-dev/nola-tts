@@ -199,7 +199,7 @@ export default function AdminUserDocumentsPage() {
             id="user-picker"
             value={selectedUserId}
             onChange={handleUserChange}
-            className="block w-full max-w-md border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#9333EA] focus:border-transparent"
+            className="block w-full max-w-md border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#9333EA] focus:border-transparent"
           >
             <option value="">— Pick a user —</option>
             {users.map((u) => (
@@ -259,7 +259,7 @@ export default function AdminUserDocumentsPage() {
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <button
                             onClick={() => exportGuideJson(g)}
-                            className="text-[#9333EA] hover:text-[#7928CA]"
+                            className="text-[#9333EA] hover:text-[#7928CA] cursor-pointer"
                           >
                             Export JSON
                           </button>
@@ -310,7 +310,7 @@ export default function AdminUserDocumentsPage() {
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <button
                             onClick={() => exportHlpJson(h)}
-                            className="text-[#9333EA] hover:text-[#7928CA]"
+                            className="text-[#9333EA] hover:text-[#7928CA] cursor-pointer"
                           >
                             Export JSON
                           </button>
