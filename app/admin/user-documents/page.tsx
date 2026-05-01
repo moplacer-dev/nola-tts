@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
@@ -49,6 +49,8 @@ export default function AdminUserDocumentsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
+  const activeUserIdRef = useRef<string>('');
+
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [guides, setGuides] = useState<PacingGuide[]>([]);
@@ -82,6 +84,7 @@ export default function AdminUserDocumentsPage() {
   }
 
   async function loadDocs(userId: string) {
+    activeUserIdRef.current = userId;
     setLoadingDocs(true);
     setError(null);
     setGuides([]);
@@ -91,24 +94,33 @@ export default function AdminUserDocumentsPage() {
         fetch(`/api/admin/pacing-guides?userId=${encodeURIComponent(userId)}`),
         fetch(`/api/admin/horizontal-lesson-plans?userId=${encodeURIComponent(userId)}`),
       ]);
+      if (activeUserIdRef.current !== userId) return;
       if (!guidesRes.ok) throw new Error('Failed to load pacing guides');
       if (!hlpsRes.ok) throw new Error('Failed to load horizontal lesson plans');
       const guidesData = await guidesRes.json();
       const hlpsData = await hlpsRes.json();
+      if (activeUserIdRef.current !== userId) return;
       setGuides(guidesData);
       setHlps(hlpsData.hlps);
     } catch (e) {
+      if (activeUserIdRef.current !== userId) return;
       setError(e instanceof Error ? e.message : 'Failed to load documents');
     } finally {
-      setLoadingDocs(false);
+      if (activeUserIdRef.current === userId) {
+        setLoadingDocs(false);
+      }
     }
   }
 
   function handleUserChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const id = e.target.value;
     setSelectedUserId(id);
-    if (id) void loadDocs(id);
-    else { setGuides([]); setHlps([]); }
+    if (id) {
+      void loadDocs(id);
+    } else {
+      setGuides([]);
+      setHlps([]);
+    }
   }
 
   if (status === 'loading' || loadingUsers) {
